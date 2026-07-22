@@ -53,7 +53,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.gameOver) return;
 
     const deltaSeconds = delta / 1000;
-    const vec = this.joystick.getVector();
+    const vec = this.joystick.getVector(deltaSeconds);
 
     this.player.move(vec.x, vec.y, deltaSeconds, time);
     this.player.trail.update(time);
