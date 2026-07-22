@@ -36,6 +36,16 @@ a run without editing code:
 - **Enemy spawning** — turn off for an empty arena, just you and the trail.
 - Sliders for player speed, trail lifetime, minimum loop area, and player
   health (a subset of the Part 11 tuning knobs).
+- **Enemy type toggles** — uncheck a type to exclude it; if only one type is
+  left checked it spawns immediately rather than waiting for its normal wave
+  phase, so you can isolate one enemy to test.
+- **Cutter targeting mode** — which trail point a cutter beelines for.
+  "Nearest to the cutter itself" (the literal spec phrasing) tends to
+  collapse onto the trail's abandoned tail in practice, since the tail sits
+  still while the head keeps moving with the player — frustrating to loop
+  in. Defaults to "nearest to the player" instead, which keeps cutters
+  engaged with the live part of the trail; "middle of trail" is a middle
+  ground. All three are selectable so you can compare directly.
 
 Hit **Start** to apply your settings and launch. To change them again,
 reload the page (settings aren't editable mid-run).

@@ -2,9 +2,10 @@ import { CONFIG } from './config.js';
 
 // Wires the start-screen overlay (plain HTML for touch-friendly native
 // sliders/checkboxes) to CONFIG before the Phaser game is created. Playtest
-// knobs only — mirrors a subset of the Part 11 tuning knobs plus two
-// debug-only conveniences (god mode, enemy spawning) that aren't part of the
-// design spec, just useful for isolating movement/trail testing from combat.
+// knobs only — mirrors a subset of the Part 11 tuning knobs plus debug-only
+// conveniences (god mode, enemy spawning, per-type spawn filters, cutter
+// targeting mode) that aren't part of the design spec, just useful for
+// isolating specific mechanics to test on their own.
 
 function bindSlider(sliderId, valueId, format = (v) => v) {
   const slider = document.getElementById(sliderId);
@@ -22,6 +23,10 @@ const healthSlider = bindSlider('health-slider', 'health-value', (v) => `${v} hi
 
 const godModeCheckbox = document.getElementById('god-mode');
 const spawningCheckbox = document.getElementById('enemy-spawning');
+const typeChaserCheckbox = document.getElementById('type-chaser');
+const typeShooterCheckbox = document.getElementById('type-shooter');
+const typeCutterCheckbox = document.getElementById('type-cutter');
+const cutterTargetingSelect = document.getElementById('cutter-targeting');
 
 document.getElementById('start-btn').addEventListener('click', () => {
   CONFIG.PLAYER.SPEED = Number(speedSlider.value);
@@ -30,6 +35,12 @@ document.getElementById('start-btn').addEventListener('click', () => {
   CONFIG.TRAIL.MIN_LOOP_AREA = Number(loopAreaSlider.value);
   CONFIG.DEBUG.GOD_MODE = godModeCheckbox.checked;
   CONFIG.DEBUG.ENEMY_SPAWNING = spawningCheckbox.checked;
+  CONFIG.DEBUG.ENEMY_TYPES = {
+    chaser: typeChaserCheckbox.checked,
+    shooter: typeShooterCheckbox.checked,
+    cutter: typeCutterCheckbox.checked,
+  };
+  CONFIG.DEBUG.CUTTER_TARGETING = cutterTargetingSelect.value;
 
   document.getElementById('menu-overlay').style.display = 'none';
   document.getElementById('game-container').style.display = 'flex';

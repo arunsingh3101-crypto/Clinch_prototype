@@ -71,5 +71,8 @@ export const CONFIG = {
   DEBUG: {
     GOD_MODE: false,
     ENEMY_SPAWNING: true,
+    ENEMY_TYPES: { chaser: true, shooter: true, cutter: true },
+    // 'nearest_to_player' | 'nearest_to_cutter' | 'trail_midpoint' — see Cutter.js
+    CUTTER_TARGETING: 'nearest_to_player',
   },
 };

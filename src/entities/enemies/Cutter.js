@@ -1,9 +1,17 @@
 import { CONFIG } from '../../config.js';
 
 // The anti-verb: ignores the trail as a wall, passes through it, and severs it
-// from the crossing point back to the tail. Beelines for the nearest point on
-// the player's live open trail; if there's no meaningful trail, it pursues the
+// from the crossing point back to the tail. Beelines for a point on the
+// player's live open trail; if there's no meaningful trail, it pursues the
 // player directly.
+//
+// Which trail point it aims for is a tunable (CONFIG.DEBUG.CUTTER_TARGETING —
+// see the start screen). Literally-nearest-to-the-cutter (the spec's default
+// phrasing) tends to collapse onto the abandoned tail in practice: the tail
+// sits still while the head keeps racing away with the player, so "nearest"
+// ends up meaning "wherever you started drawing," not "wherever the action
+// is." Defaulting to nearest-to-the-player keeps it threatening the live part
+// of the line instead.
 export default class Cutter {
   static type = 'cutter';
 
@@ -17,15 +25,27 @@ export default class Cutter {
     this.sprite.setAngle(45);
   }
 
+  pickTrailTarget(player, trail) {
+    switch (CONFIG.DEBUG.CUTTER_TARGETING) {
+      case 'nearest_to_cutter':
+        return trail.nearestPoint(this.x, this.y);
+      case 'trail_midpoint':
+        return trail.points[Math.floor(trail.points.length / 2)];
+      case 'nearest_to_player':
+      default:
+        return trail.nearestPoint(player.x, player.y);
+    }
+  }
+
   update(player, trail, deltaSeconds) {
     let targetX = player.x;
     let targetY = player.y;
 
     if (!trail.isEmpty()) {
-      const nearest = trail.nearestPoint(this.x, this.y);
-      if (nearest) {
-        targetX = nearest.x;
-        targetY = nearest.y;
+      const target = this.pickTrailTarget(player, trail);
+      if (target) {
+        targetX = target.x;
+        targetY = target.y;
       }
     }
 

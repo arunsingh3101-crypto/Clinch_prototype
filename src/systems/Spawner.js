@@ -42,6 +42,7 @@ export default class Spawner {
 
     for (let i = 0; i < size; i++) {
       const type = this.pickType(phase);
+      if (!type) continue; // no enemy types enabled at all
       const pos = this.spawnPosition(player);
       if (type === 'chaser') enemies.push(new Chaser(this.scene, pos.x, pos.y));
       else if (type === 'shooter') enemies.push(new Shooter(this.scene, pos.x, pos.y));
@@ -49,7 +50,23 @@ export default class Spawner {
     }
   }
 
+  // Picks a type per the Part 9 phase mix, then filters through the start
+  // screen's enemy-type toggles. If the phase-picked type is disabled, this
+  // falls back to a uniform pick among whatever IS enabled — which also means
+  // restricting to e.g. cutters-only spawns cutters immediately instead of
+  // waiting for their normal phase gate, which is what you want when
+  // isolating one enemy type for testing.
   pickType(phase) {
+    const enabled = CONFIG.DEBUG.ENEMY_TYPES;
+    const phaseType = this.phaseType(phase);
+    if (enabled[phaseType]) return phaseType;
+
+    const pool = Object.keys(enabled).filter((k) => enabled[k]);
+    if (pool.length === 0) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  phaseType(phase) {
     if (phase === 0) return 'chaser';
     if (phase === 1) return Math.random() < 0.7 ? 'chaser' : 'shooter';
     // phase 2+: full mix, chasers still most common (they're the herding engine)
