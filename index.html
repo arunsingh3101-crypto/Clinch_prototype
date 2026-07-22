@@ -19,22 +19,173 @@
       touch-action: none;
       -webkit-user-select: none;
       user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e8eef2;
     }
     #game-container {
       width: 100%;
       height: 100%;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
     }
     canvas {
       touch-action: none;
     }
+
+    #menu-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      touch-action: pan-y;
+      padding: 24px 16px;
+      box-sizing: border-box;
+    }
+    #menu-panel {
+      width: 100%;
+      max-width: 420px;
+    }
+    #menu-panel h1 {
+      font-size: 22px;
+      margin: 0 0 2px;
+      letter-spacing: 0.02em;
+    }
+    #menu-panel .subtitle {
+      color: #8a97a3;
+      font-size: 13px;
+      margin: 0 0 20px;
+    }
+    .row {
+      margin-bottom: 16px;
+    }
+    .row label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .row .value {
+      color: #2ecc71;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #2ecc71;
+      height: 28px;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1a2029;
+      border: 1px solid #2a323d;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .checkbox-row .label-block {
+      display: flex;
+      flex-direction: column;
+    }
+    .checkbox-row .label-block .title {
+      font-size: 14px;
+    }
+    .checkbox-row .label-block .desc {
+      font-size: 12px;
+      color: #8a97a3;
+    }
+    input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      accent-color: #2ecc71;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    #start-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: #2ecc71;
+      color: #0b1410;
+      cursor: pointer;
+    }
+    #start-btn:active {
+      background: #27ae60;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #2a323d;
+      margin: 18px 0;
+    }
+    .section-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8a97a3;
+      margin: 0 0 10px;
+    }
   </style>
 </head>
 <body>
+  <div id="menu-overlay">
+    <div id="menu-panel">
+      <h1>Cinch — Prototype</h1>
+      <p class="subtitle">Loop the trail around enemies to kill them. Tune knobs below, then start.</p>
+
+      <div class="checkbox-row">
+        <div class="label-block">
+          <span class="title">God mode</span>
+          <span class="desc">Take no damage — pure movement/trail testing</span>
+        </div>
+        <input type="checkbox" id="god-mode" />
+      </div>
+
+      <div class="checkbox-row">
+        <div class="label-block">
+          <span class="title">Enemy spawning</span>
+          <span class="desc">Turn off for an empty arena, just you and the trail</span>
+        </div>
+        <input type="checkbox" id="enemy-spawning" checked />
+      </div>
+
+      <hr />
+      <p class="section-label">Tuning knobs (Part 11)</p>
+
+      <div class="row">
+        <label>Player speed <span class="value" id="speed-value"></span></label>
+        <input type="range" id="speed-slider" min="100" max="350" step="10" value="220" />
+      </div>
+
+      <div class="row">
+        <label>Trail lifetime <span class="value" id="trail-value"></span></label>
+        <input type="range" id="trail-slider" min="2000" max="12000" step="500" value="6000" />
+      </div>
+
+      <div class="row">
+        <label>Min loop area <span class="value" id="looparea-value"></span></label>
+        <input type="range" id="looparea-slider" min="500" max="12000" step="100" value="4200" />
+      </div>
+
+      <div class="row">
+        <label>Player health <span class="value" id="health-value"></span></label>
+        <input type="range" id="health-slider" min="1" max="10" step="1" value="4" />
+      </div>
+
+      <button id="start-btn">Start</button>
+    </div>
+  </div>
+
   <div id="game-container"></div>
+
   <script src="./vendor/phaser.min.js"></script>
-  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/menu.js"></script>
 </body>
 </html>

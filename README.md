@@ -27,10 +27,25 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
+## Start screen
+
+Before the game boots you get an options screen (`src/menu.js`) to fine-tune
+a run without editing code:
+
+- **God mode** — take no damage, for isolating movement/trail testing from combat.
+- **Enemy spawning** — turn off for an empty arena, just you and the trail.
+- Sliders for player speed, trail lifetime, minimum loop area, and player
+  health (a subset of the Part 11 tuning knobs).
+
+Hit **Start** to apply your settings and launch. To change them again,
+reload the page (settings aren't editable mid-run).
+
 ## Controls
 
 - **Touch:** drag anywhere on screen — a virtual joystick appears under your
-  finger; the direction you drag is the direction you move.
+  finger; the direction you drag is the direction you move. There's a small
+  dead zone near your touch point and the direction eases in smoothly, so
+  minor thumb tremor doesn't register as movement.
 - **Desktop:** WASD or arrow keys.
 - Tap/click anywhere to restart after death.
 
@@ -59,9 +74,11 @@ see the design doc.
 ## Project structure
 
 ```
-index.html              entry point, mobile viewport/meta setup
+index.html              entry point + start-screen markup, mobile viewport/meta setup
 vendor/phaser.min.js     vendored Phaser 3 build (no CDN dependency)
-src/config.js            all tuning knobs (Part 11)
+src/menu.js              wires the start screen to CONFIG, then boots the game
+src/main.js              exports startGame() — builds the Phaser.Game instance
+src/config.js            all tuning knobs (Part 11) + debug overrides (god mode, spawning)
 src/utils/geometry.js    segment intersection, polygon area, point-in-polygon
 src/entities/            Player, Trail (the core verb), Projectile
 src/entities/enemies/    Chaser, Shooter, Cutter

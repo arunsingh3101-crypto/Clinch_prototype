@@ -65,4 +65,11 @@ export const CONFIG = {
     PULSE_SIZE_MAX: 5,
     ESCALATION_RAMP_MS: 300000, // time after PHASE_ESCALATION_AT to reach max density
   },
+
+  // Playtest-only overrides, set from the start screen (src/menu.js). Not part
+  // of the design spec — purely for fine-tuning/testing convenience.
+  DEBUG: {
+    GOD_MODE: false,
+    ENEMY_SPAWNING: true,
+  },
 };

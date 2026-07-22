@@ -34,6 +34,7 @@ export default class Player {
   }
 
   takeDamage(amount, now) {
+    if (CONFIG.DEBUG.GOD_MODE) return false;
     if (this.isInvulnerable || this.health <= 0) return false;
     this.health -= amount;
     this.invulnUntil = now + CONFIG.PLAYER.INVULN_MS;

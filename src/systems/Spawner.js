@@ -32,6 +32,7 @@ export default class Spawner {
   }
 
   update(now, player, enemies) {
+    if (!CONFIG.DEBUG.ENEMY_SPAWNING) return;
     if (now < this.nextPulseAt) return;
     const elapsed = now - this.runStart;
     this.nextPulseAt = now + this.pulseInterval(elapsed);
