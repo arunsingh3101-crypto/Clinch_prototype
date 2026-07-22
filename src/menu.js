@@ -45,5 +45,20 @@ document.getElementById('start-btn').addEventListener('click', () => {
   document.getElementById('menu-overlay').style.display = 'none';
   document.getElementById('game-container').style.display = 'flex';
 
-  import('./main.js').then(({ startGame }) => startGame());
+  // Wait for a real layout pass before Phaser measures the now-visible
+  // container for its FIT scale calculation — going straight from
+  // display:none to creating the game in the same tick risks measuring a
+  // still-zero-sized element on some browsers. Two rAFs guarantee at least
+  // one full layout/paint has happened first.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      import('./main.js')
+        .then(({ startGame }) => startGame())
+        .catch((err) => {
+          const el = document.getElementById('error-overlay');
+          el.style.display = 'block';
+          el.textContent += 'Failed to start game: ' + (err.stack || err.message || err) + '\n\n';
+        });
+    });
+  });
 });

@@ -7,6 +7,24 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#10141a" />
   <title>Cinch — Prototype</title>
+  <script>
+    // Surfaces uncaught errors directly on the page. This is a phone-testable
+    // prototype with no devtools access most of the time — a silent blank
+    // screen is undiagnosable, this at least shows what broke.
+    window.addEventListener('error', function (e) {
+      showBootError((e.error && e.error.stack) || (e.message + ' (' + e.filename + ':' + e.lineno + ')'));
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      var r = e.reason;
+      showBootError('Unhandled promise rejection: ' + ((r && (r.stack || r.message)) || String(r)));
+    });
+    function showBootError(text) {
+      var el = document.getElementById('error-overlay');
+      if (!el) return; // body not parsed yet; shouldn't happen given script placement, but stay safe
+      el.style.display = 'block';
+      el.textContent += text + '\n\n';
+    }
+  </script>
   <style>
     html, body {
       margin: 0;
@@ -21,6 +39,21 @@
       user-select: none;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #e8eef2;
+    }
+    #error-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(20, 0, 0, 0.95);
+      color: #ff8a8a;
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+      touch-action: pan-y;
     }
     #game-container {
       width: 100%;
@@ -171,6 +204,7 @@
   </style>
 </head>
 <body>
+  <div id="error-overlay"></div>
   <div id="menu-overlay">
     <div id="menu-panel">
       <h1>Cinch — Prototype</h1>

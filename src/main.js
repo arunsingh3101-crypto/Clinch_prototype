@@ -2,7 +2,7 @@ import { CONFIG } from './config.js';
 import GameScene from './scenes/GameScene.js';
 
 export function startGame() {
-  return new Phaser.Game({
+  const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game-container',
     width: CONFIG.ARENA.WIDTH,
@@ -17,4 +17,12 @@ export function startGame() {
     },
     scene: [GameScene],
   });
+
+  // Belt-and-suspenders against the container having been display:none until
+  // just before this call: force the scale manager to re-measure its parent
+  // once boot completes, in case its own resize-detection missed the
+  // none->visible transition on a given browser.
+  game.events.once(Phaser.Core.Events.READY, () => game.scale.refresh());
+
+  return game;
 }
