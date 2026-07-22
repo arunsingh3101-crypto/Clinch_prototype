@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js';
+import { CONFIG } from './config.js?v=20260722a';
 
 // Wires the start-screen overlay (plain HTML for touch-friendly native
 // sliders/checkboxes) to CONFIG before the Phaser game is created. Playtest
@@ -52,7 +52,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
   // one full layout/paint has happened first.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      import('./main.js')
+      import('./main.js?v=20260722a')
         .then(({ startGame }) => startGame())
         .catch((err) => {
           const el = document.getElementById('error-overlay');

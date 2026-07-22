@@ -18,6 +18,15 @@ on GitHub Pages and test on a phone.
    your phone (rotate to landscape for the best fit) and play. Every push to
    that branch redeploys automatically within a minute or two — just reload.
 
+Every internal script/import URL carries a `?v=...` cache-busting suffix
+(same value everywhere). GitHub Pages doesn't hash filenames on deploy, so
+without this a phone browser can end up with a torn mix of old and new
+cached files across visits — one stale, one fresh — which breaks in
+confusing ways. Run `./scripts/bump-cache-version.sh` before pushing any
+change to `src/` or `index.html` so the whole module graph refetches
+together; if a page ever fails right after a fresh deploy, this is the
+first thing to check.
+
 ## Run it locally
 
 No build step — any static file server works:

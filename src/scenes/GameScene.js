@@ -1,9 +1,9 @@
-import { CONFIG } from '../config.js';
-import { dist, pointInPolygon } from '../utils/geometry.js';
-import Player from '../entities/Player.js';
-import VirtualJoystick from '../systems/VirtualJoystick.js';
-import Spawner from '../systems/Spawner.js';
-import ScoreManager from '../systems/ScoreManager.js';
+import { CONFIG } from '../config.js?v=20260722a';
+import { dist, pointInPolygon } from '../utils/geometry.js?v=20260722a';
+import Player from '../entities/Player.js?v=20260722a';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260722a';
+import Spawner from '../systems/Spawner.js?v=20260722a';
+import ScoreManager from '../systems/ScoreManager.js?v=20260722a';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {

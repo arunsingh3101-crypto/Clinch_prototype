@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js';
-import { clamp, dist } from '../utils/geometry.js';
-import Chaser from '../entities/enemies/Chaser.js';
-import Shooter from '../entities/enemies/Shooter.js';
-import Cutter from '../entities/enemies/Cutter.js';
+import { CONFIG } from '../config.js?v=20260722a';
+import { clamp, dist } from '../utils/geometry.js?v=20260722a';
+import Chaser from '../entities/enemies/Chaser.js?v=20260722a';
+import Shooter from '../entities/enemies/Shooter.js?v=20260722a';
+import Cutter from '../entities/enemies/Cutter.js?v=20260722a';
 
 // Phased, pulsed wave spawner (Part 9). Per-enemy stats stay constant; only
 // density, mix, and cadence escalate over the run.
@@ -57,7 +57,11 @@ export default class Spawner {
   // waiting for their normal phase gate, which is what you want when
   // isolating one enemy type for testing.
   pickType(phase) {
-    const enabled = CONFIG.DEBUG.ENEMY_TYPES;
+    // Falls back to "everything enabled" if a stale cached config.js somehow
+    // lacks this field (browsers can serve a torn mix of old/new files across
+    // a static site with unversioned URLs) -- degrade gracefully instead of
+    // throwing mid-run.
+    const enabled = CONFIG.DEBUG.ENEMY_TYPES || { chaser: true, shooter: true, cutter: true };
     const phaseType = this.phaseType(phase);
     if (enabled[phaseType]) return phaseType;
 

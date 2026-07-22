@@ -1,5 +1,5 @@
-import { CONFIG } from './config.js';
-import GameScene from './scenes/GameScene.js';
+import { CONFIG } from './config.js?v=20260722a';
+import GameScene from './scenes/GameScene.js?v=20260722a';
 
 export function startGame() {
   const game = new Phaser.Game({

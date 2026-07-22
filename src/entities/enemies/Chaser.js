@@ -1,5 +1,5 @@
-import { CONFIG } from '../../config.js';
-import { clamp } from '../../utils/geometry.js';
+import { CONFIG } from '../../config.js?v=20260722a';
+import { clamp } from '../../utils/geometry.js?v=20260722a';
 
 // Pure pursuit, slower than the player, blocked by the trail like a wall
 // (basic wall-slide steering — enough for "paths around it" at prototype fidelity).
