@@ -43,6 +43,14 @@ export const CONFIG = {
       RADIUS: 10,
       COLOR: 0x9b59b6,
     },
+    DORMANT: {
+      SPEED: 130, // must stay below PLAYER.SPEED, same as chaser
+      RADIUS: 11,
+      CONTACT_DAMAGE: 1,
+      COLOR: 0x3498db,
+      ACTIVATE_MIN_DIST: 60, // stays stationary if player is closer than this
+      ACTIVATE_MAX_DIST: 220, // stays stationary if player is farther than this
+    },
     SPAWN_MIN_DIST_FROM_PLAYER: 180,
   },
 
@@ -71,7 +79,7 @@ export const CONFIG = {
   DEBUG: {
     GOD_MODE: false,
     ENEMY_SPAWNING: true,
-    ENEMY_TYPES: { chaser: true, shooter: true, cutter: true },
+    ENEMY_TYPES: { chaser: true, shooter: true, cutter: true, dormant: true },
     // 'nearest_to_player' | 'nearest_to_cutter' | 'trail_midpoint' — see Cutter.js
     CUTTER_TARGETING: 'nearest_to_player',
   },
