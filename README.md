@@ -57,11 +57,13 @@ a run without editing code:
 
 - **God mode** — take no damage, for isolating movement/trail testing from combat.
 - **Enemy spawning** — turn off for an empty arena, just you and the trail.
-- Sliders for player speed, trail lifetime, minimum loop area, and player
-  health (a subset of the Part 11 tuning knobs).
-- **Enemy type toggles** — uncheck a type to exclude it; if only one type is
-  left checked it spawns immediately rather than waiting for its normal wave
-  phase, so you can isolate one enemy to test.
+- Sliders for player speed, trail lifetime, minimum loop area, player
+  health, and enemy speed (a subset of the Part 11 tuning knobs). The enemy
+  speed slider sets Chaser, Dormant, and Fleer speed together.
+- **Enemy type toggles** — Chaser, Shooter, Cutter, Dormant, Fleer. Uncheck a
+  type to exclude it; if only one type is left checked it spawns immediately
+  rather than waiting for its normal wave phase, so you can isolate one
+  enemy to test.
 - **Cutter targeting mode** — which trail point a cutter beelines for.
   "Nearest to the cutter itself" (the literal spec phrasing) tends to
   collapse onto the trail's abandoned tail in practice, since the tail sits
@@ -81,6 +83,9 @@ reload the page (settings aren't editable mid-run).
   minor thumb tremor doesn't register as movement.
 - **Desktop:** WASD or arrow keys.
 - Tap/click anywhere to restart after death.
+- **Pause button** (gameplay screen) opens a Resume / Return to Configuration
+  overlay — timers freeze while paused. Returning to configuration tears
+  down the run so Start spins up a fresh one.
 
 ## What's implemented (prototype scope — design doc Parts 1–10)
 
@@ -90,15 +95,20 @@ reload the page (settings aren't editable mid-run).
 - Closing a loop (trail head crossing the player's own live trail) kills
   every enemy whose center lies inside the enclosed polygon, then resets the
   whole trail. Loops below a minimum area are inert no-ops.
-- Three enemies, each with a distinct trail relationship: **Chaser** (pure
+- Five enemies, each with a distinct trail relationship: **Chaser** (pure
   pursuit, blocked by the trail), **Shooter** (fires trail-blockable
   projectiles), **Cutter** (passes through the trail and severs it from the
-  crossing point back to the tail).
+  crossing point back to the tail), **Dormant** (inert ambusher — only
+  closes in while the player is within its activation band), **Fleer**
+  (always flees the player; gets trapped once cornered). Dormant and Fleer
+  are prototype tuning/testing additions beyond the design doc's core three.
 - Superlinear (quadratic) scoring by enemies-caught-per-loop, plus a combo
   multiplier for fast consecutive loops.
 - Phased, pulsed wave spawning that escalates over ~10 minutes, per Part 9.
 - Health, hit invulnerability window, game-over screen with kill count and
   best combo, restart.
+- In-game pause (Resume / Return to Configuration) via native Phaser scene
+  pause/resume.
 
 Part 11 tuning knobs live in one place: `src/config.js`. Part 12 (stealth,
 capture, upgrades, alternate close mechanics) is intentionally not built —
