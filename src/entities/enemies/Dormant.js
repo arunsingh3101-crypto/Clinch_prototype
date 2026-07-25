@@ -1,5 +1,5 @@
-import { CONFIG } from '../../config.js?v=20260725061932';
-import { clamp, dist } from '../../utils/geometry.js?v=20260725061932';
+import { CONFIG } from '../../config.js?v=20260725062920';
+import { clamp, dist } from '../../utils/geometry.js?v=20260725062920';
 
 // Ambush type: inert outside its activation band. Only closes in on the
 // player while they're within [ACTIVATE_MIN_DIST, ACTIVATE_MAX_DIST] of it —

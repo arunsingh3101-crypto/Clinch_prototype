@@ -1,9 +1,10 @@
-import { CONFIG } from '../config.js?v=20260725061932';
-import { clamp, dist } from '../utils/geometry.js?v=20260725061932';
-import Chaser from '../entities/enemies/Chaser.js?v=20260725061932';
-import Shooter from '../entities/enemies/Shooter.js?v=20260725061932';
-import Cutter from '../entities/enemies/Cutter.js?v=20260725061932';
-import Dormant from '../entities/enemies/Dormant.js?v=20260725061932';
+import { CONFIG } from '../config.js?v=20260725062920';
+import { clamp, dist } from '../utils/geometry.js?v=20260725062920';
+import Chaser from '../entities/enemies/Chaser.js?v=20260725062920';
+import Shooter from '../entities/enemies/Shooter.js?v=20260725062920';
+import Cutter from '../entities/enemies/Cutter.js?v=20260725062920';
+import Dormant from '../entities/enemies/Dormant.js?v=20260725062920';
+import Fleer from '../entities/enemies/Fleer.js?v=20260725062920';
 
 // Phased, pulsed wave spawner (Part 9). Per-enemy stats stay constant; only
 // density, mix, and cadence escalate over the run.
@@ -48,7 +49,8 @@ export default class Spawner {
       if (type === 'chaser') enemies.push(new Chaser(this.scene, pos.x, pos.y));
       else if (type === 'shooter') enemies.push(new Shooter(this.scene, pos.x, pos.y));
       else if (type === 'cutter') enemies.push(new Cutter(this.scene, pos.x, pos.y));
-      else enemies.push(new Dormant(this.scene, pos.x, pos.y));
+      else if (type === 'dormant') enemies.push(new Dormant(this.scene, pos.x, pos.y));
+      else enemies.push(new Fleer(this.scene, pos.x, pos.y));
     }
   }
 
@@ -63,7 +65,7 @@ export default class Spawner {
     // lacks this field (browsers can serve a torn mix of old/new files across
     // a static site with unversioned URLs) -- degrade gracefully instead of
     // throwing mid-run.
-    const enabled = CONFIG.DEBUG.ENEMY_TYPES || { chaser: true, shooter: true, cutter: true, dormant: true };
+    const enabled = CONFIG.DEBUG.ENEMY_TYPES || { chaser: true, shooter: true, cutter: true, dormant: true, fleer: true };
     const phaseType = this.phaseType(phase);
     if (enabled[phaseType]) return phaseType;
 
@@ -77,10 +79,11 @@ export default class Spawner {
     if (phase === 1) return Math.random() < 0.7 ? 'chaser' : 'shooter';
     // phase 2+: full mix, chasers still most common (they're the herding engine)
     const r = Math.random();
-    if (r < 0.5) return 'chaser';
-    if (r < 0.75) return 'shooter';
-    if (r < 0.9) return 'cutter';
-    return 'dormant';
+    if (r < 0.45) return 'chaser';
+    if (r < 0.65) return 'shooter';
+    if (r < 0.8) return 'cutter';
+    if (r < 0.9) return 'dormant';
+    return 'fleer';
   }
 
   spawnPosition(player) {

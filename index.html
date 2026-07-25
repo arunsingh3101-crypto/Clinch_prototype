@@ -324,7 +324,7 @@
       <div class="row">
         <label>Enemy speed <span class="value" id="enemy-speed-value"></span></label>
         <input type="range" id="enemy-speed-slider" min="40" max="350" step="10" value="130" />
-        <p class="hint">Applies to Chaser and Dormant (while active) — compare against player speed above to fine-tune the chase.</p>
+        <p class="hint">Applies to Chaser, Dormant (while active), and Fleer — compare against player speed above to fine-tune the chase.</p>
       </div>
 
       <hr />
@@ -337,8 +337,9 @@
           <label class="type-toggle"><input type="checkbox" id="type-shooter" checked /> Shooter</label>
           <label class="type-toggle"><input type="checkbox" id="type-cutter" checked /> Cutter</label>
           <label class="type-toggle"><input type="checkbox" id="type-dormant" checked /> Dormant</label>
+          <label class="type-toggle"><input type="checkbox" id="type-fleer" checked /> Fleer</label>
         </div>
-        <p class="hint">Unchecking a type spawns it immediately when selected alone, instead of waiting for its normal wave phase — handy for isolating one enemy to test. Dormant sits still until the player is within its activation range, then chases.</p>
+        <p class="hint">Unchecking a type spawns it immediately when selected alone, instead of waiting for its normal wave phase — handy for isolating one enemy to test. Dormant sits still until the player is within its activation range, then chases. Fleer always runs directly away from the player — corner it against a wall to trap it.</p>
       </div>
 
       <div class="row">
@@ -365,7 +366,7 @@
     </div>
   </div>
 
-  <script src="./vendor/phaser.min.js?v=20260725061932"></script>
-  <script type="module" src="./src/menu.js?v=20260725061932"></script>
+  <script src="./vendor/phaser.min.js?v=20260725062920"></script>
+  <script type="module" src="./src/menu.js?v=20260725062920"></script>
 </body>
 </html>

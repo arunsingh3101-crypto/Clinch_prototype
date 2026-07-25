@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=20260725061932';
+import { CONFIG } from './config.js?v=20260725062920';
 
 // Wires the start-screen overlay (plain HTML for touch-friendly native
 // sliders/checkboxes) to CONFIG before the Phaser game is created. Playtest
@@ -28,6 +28,7 @@ const typeChaserCheckbox = document.getElementById('type-chaser');
 const typeShooterCheckbox = document.getElementById('type-shooter');
 const typeCutterCheckbox = document.getElementById('type-cutter');
 const typeDormantCheckbox = document.getElementById('type-dormant');
+const typeFleerCheckbox = document.getElementById('type-fleer');
 const cutterTargetingSelect = document.getElementById('cutter-targeting');
 
 const pauseBtn = document.getElementById('pause-btn');
@@ -73,6 +74,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
   CONFIG.TRAIL.MIN_LOOP_AREA = Number(loopAreaSlider.value);
   CONFIG.ENEMIES.CHASER.SPEED = Number(enemySpeedSlider.value);
   CONFIG.ENEMIES.DORMANT.SPEED = Number(enemySpeedSlider.value);
+  CONFIG.ENEMIES.FLEER.SPEED = Number(enemySpeedSlider.value);
   CONFIG.DEBUG.GOD_MODE = godModeCheckbox.checked;
   CONFIG.DEBUG.ENEMY_SPAWNING = spawningCheckbox.checked;
   CONFIG.DEBUG.ENEMY_TYPES = {
@@ -80,6 +82,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     shooter: typeShooterCheckbox.checked,
     cutter: typeCutterCheckbox.checked,
     dormant: typeDormantCheckbox.checked,
+    fleer: typeFleerCheckbox.checked,
   };
   CONFIG.DEBUG.CUTTER_TARGETING = cutterTargetingSelect.value;
 
@@ -93,7 +96,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
   // one full layout/paint has happened first.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      import('./main.js?v=20260725061932')
+      import('./main.js?v=20260725062920')
         .then(({ startGame }) => {
           currentGame = startGame();
           pauseBtn.style.display = 'flex';
