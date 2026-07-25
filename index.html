@@ -7,6 +7,46 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#10141a" />
   <title>Cinch — Prototype</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    // Self-healing cache-buster. GitHub Pages can't set real Cache-Control
+    // headers, and Android Chrome in particular will keep serving a stale
+    // cached copy of THIS FILE even on a manual pull-to-refresh -- at which
+    // point the ?v= bump on every internal script/import (see
+    // scripts/bump-cache-version.sh) never matters, because the stale HTML
+    // never references the new URLs in the first place.
+    //
+    // This runs even from a stale cached copy of index.html: it fetches
+    // version.json with the HTTP cache forced off, and if the deployed
+    // version doesn't match what's embedded below, reloads via a
+    // never-before-seen URL (a fresh ?v= query param), which the browser
+    // cache cannot have an entry for. No hard-refresh gesture required.
+    window.APP_VERSION = '20260725065836';
+    (function () {
+      var ATTEMPTS_KEY = 'cinch_version_redirect_attempts';
+      fetch('./version.json?_=' + Date.now(), { cache: 'no-store' })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data || !data.version || data.version === window.APP_VERSION) {
+            sessionStorage.removeItem(ATTEMPTS_KEY);
+            return;
+          }
+          // Cap retries so a broken/blocked version.json can't reload-loop forever.
+          var attempts = Number(sessionStorage.getItem(ATTEMPTS_KEY) || '0');
+          if (attempts >= 2) return;
+          sessionStorage.setItem(ATTEMPTS_KEY, String(attempts + 1));
+          var url = new URL(location.href);
+          url.searchParams.set('v', data.version);
+          location.replace(url.toString());
+        })
+        .catch(function () {
+          // Offline, or the fetch itself is blocked -- proceed with whatever
+          // already loaded rather than getting stuck.
+        });
+    })();
+  </script>
   <script>
     // Surfaces uncaught errors directly on the page. This is a phone-testable
     // prototype with no devtools access most of the time — a silent blank
@@ -167,13 +207,14 @@
     }
     .type-toggles {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
     }
     .type-toggle {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex: 1;
+      flex: 1 1 40%;
       background: #1a2029;
       border: 1px solid #2a323d;
       border-radius: 8px;
@@ -200,6 +241,77 @@
       color: #e8eef2;
       border: 1px solid #2a323d;
       border-radius: 8px;
+    }
+
+    #pause-btn {
+      display: none;
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 500;
+      width: 44px;
+      height: 44px;
+      align-items: center;
+      justify-content: center;
+      background: rgba(26, 32, 41, 0.85);
+      border: 1px solid #2a323d;
+      border-radius: 50%;
+      color: #e8eef2;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #pause-btn:active {
+      background: rgba(42, 50, 61, 0.9);
+    }
+    #pause-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 13, 18, 0.85);
+      touch-action: none;
+    }
+    #pause-panel {
+      width: 100%;
+      max-width: 320px;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    #pause-panel h2 {
+      margin: 0 0 20px;
+      font-size: 20px;
+      letter-spacing: 0.02em;
+    }
+    #pause-panel button {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #resume-btn {
+      background: #2ecc71;
+      color: #0b1410;
+    }
+    #resume-btn:active {
+      background: #27ae60;
+    }
+    #quit-to-menu-btn {
+      background: #1a2029;
+      color: #e8eef2;
+      border: 1px solid #2a323d !important;
+      margin-bottom: 0 !important;
+    }
+    #quit-to-menu-btn:active {
+      background: #2a323d;
     }
   </style>
 </head>
@@ -249,6 +361,12 @@
         <input type="range" id="health-slider" min="1" max="10" step="1" value="4" />
       </div>
 
+      <div class="row">
+        <label>Enemy speed <span class="value" id="enemy-speed-value"></span></label>
+        <input type="range" id="enemy-speed-slider" min="40" max="350" step="10" value="130" />
+        <p class="hint">Applies to Chaser, Dormant (while active), and Fleer — compare against player speed above to fine-tune the chase.</p>
+      </div>
+
       <hr />
       <p class="section-label">Enemy testing</p>
 
@@ -258,8 +376,10 @@
           <label class="type-toggle"><input type="checkbox" id="type-chaser" checked /> Chaser</label>
           <label class="type-toggle"><input type="checkbox" id="type-shooter" checked /> Shooter</label>
           <label class="type-toggle"><input type="checkbox" id="type-cutter" checked /> Cutter</label>
+          <label class="type-toggle"><input type="checkbox" id="type-dormant" checked /> Dormant</label>
+          <label class="type-toggle"><input type="checkbox" id="type-fleer" checked /> Fleer</label>
         </div>
-        <p class="hint">Unchecking a type spawns it immediately when selected alone, instead of waiting for its normal wave phase — handy for isolating one enemy to test.</p>
+        <p class="hint">Unchecking a type spawns it immediately when selected alone, instead of waiting for its normal wave phase — handy for isolating one enemy to test. Dormant sits still until the player is within its activation range, then chases. Fleer always runs directly away from the player — corner it against a wall to trap it.</p>
       </div>
 
       <div class="row">
@@ -277,7 +397,16 @@
 
   <div id="game-container"></div>
 
-  <script src="./vendor/phaser.min.js?v=20260722a"></script>
-  <script type="module" src="./src/menu.js?v=20260722a"></script>
+  <button id="pause-btn" aria-label="Pause">&#9208;</button>
+  <div id="pause-overlay">
+    <div id="pause-panel">
+      <h2>Paused</h2>
+      <button id="resume-btn">Resume</button>
+      <button id="quit-to-menu-btn">Return to Configuration</button>
+    </div>
+  </div>
+
+  <script src="./vendor/phaser.min.js?v=20260725065836"></script>
+  <script type="module" src="./src/menu.js?v=20260725065836"></script>
 </body>
 </html>

@@ -27,6 +27,20 @@ change to `src/` or `index.html` so the whole module graph refetches
 together; if a page ever fails right after a fresh deploy, this is the
 first thing to check.
 
+That `?v=` bump only helps once a fresh copy of `index.html` itself has been
+fetched — but `index.html` is a plain unversioned URL, and mobile browsers
+(Android Chrome especially) can keep serving a stale cached copy of it even
+on a manual pull-to-refresh, with no hard-refresh gesture available to force
+the issue. `index.html` carries a small inline script for this: on every
+load it fetches `version.json` with the HTTP cache forced off and compares
+it to the version embedded in the page; on a mismatch it reloads via a
+never-before-seen `?v=...` URL, which the cache can't have an entry for.
+This runs even from a stale cached copy of `index.html`, since the check
+itself doesn't change across versions — so a phone that's stuck on an old
+copy self-heals on its next load rather than needing to be told to hard
+refresh. `scripts/bump-cache-version.sh` keeps `version.json` and the
+embedded version in sync automatically; no separate step needed.
+
 ## Run it locally
 
 No build step — any static file server works:
@@ -93,14 +107,15 @@ see the design doc.
 ## Project structure
 
 ```
-index.html              entry point + start-screen markup, mobile viewport/meta setup
+index.html              entry point + start-screen markup, self-healing version check
+version.json             deployed-version marker, read by index.html's version check
 vendor/phaser.min.js     vendored Phaser 3 build (no CDN dependency)
 src/menu.js              wires the start screen to CONFIG, then boots the game
 src/main.js              exports startGame() — builds the Phaser.Game instance
 src/config.js            all tuning knobs (Part 11) + debug overrides (god mode, spawning)
 src/utils/geometry.js    segment intersection, polygon area, point-in-polygon
 src/entities/            Player, Trail (the core verb), Projectile
-src/entities/enemies/    Chaser, Shooter, Cutter
+src/entities/enemies/    Chaser, Shooter, Cutter, Dormant, Fleer
 src/systems/             VirtualJoystick, Spawner (waves), ScoreManager
 src/scenes/GameScene.js  ties it all together — the main update loop
 ```

@@ -1,25 +1,27 @@
-import { CONFIG } from '../../config.js?v=20260725065836';
-import { clamp } from '../../utils/geometry.js?v=20260725065836';
+import { CONFIG } from '../../config.js?v=20260722a';
+import { clamp } from '../../utils/geometry.js?v=20260722a';
 
-// Pure pursuit, slower than the player, blocked by the trail like a wall
-// (basic wall-slide steering — enough for "paths around it" at prototype fidelity).
-export default class Chaser {
-  static type = 'chaser';
+// The coward: always runs directly away from the player, using the same
+// trail-blocked wall-slide steering as Chaser (just pointed the other way).
+// Can't outrun a corner — get it against a wall and it has nowhere left to
+// flee, which is the intended way to catch one in a loop.
+export default class Fleer {
+  static type = 'fleer';
 
   constructor(scene, x, y) {
     this.scene = scene;
     this.x = x;
     this.y = y;
-    this.radius = CONFIG.ENEMIES.CHASER.RADIUS;
+    this.radius = CONFIG.ENEMIES.FLEER.RADIUS;
     this.alive = true;
-    this.sprite = scene.add.rectangle(x, y, this.radius * 2, this.radius * 2, CONFIG.ENEMIES.CHASER.COLOR);
+    this.sprite = scene.add.rectangle(x, y, this.radius * 2, this.radius * 2, CONFIG.ENEMIES.FLEER.COLOR);
   }
 
   update(player, trail, deltaSeconds) {
-    const dx = player.x - this.x;
-    const dy = player.y - this.y;
+    const dx = this.x - player.x;
+    const dy = this.y - player.y;
     const len = Math.hypot(dx, dy) || 1;
-    const speed = CONFIG.ENEMIES.CHASER.SPEED;
+    const speed = CONFIG.ENEMIES.FLEER.SPEED;
     const stepX = (dx / len) * speed * deltaSeconds;
     const stepY = (dy / len) * speed * deltaSeconds;
 
@@ -36,7 +38,8 @@ export default class Chaser {
       this.clampToArena();
       return;
     }
-    // Slide: try each axis independently so the chaser flows along the wall.
+    // Slide: try each axis independently so it flows along the wall/trail
+    // instead of freezing dead the instant its escape line is blocked.
     const onlyX = { x: this.x + stepX, y: this.y };
     if (!trail.blocksSegment(from, onlyX)) {
       this.x = onlyX.x;
