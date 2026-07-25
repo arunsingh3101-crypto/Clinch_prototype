@@ -11,12 +11,11 @@ on GitHub Pages and test on a phone.
 
 ## Play it on your phone (GitHub Pages)
 
-1. In this repo on GitHub: **Settings → Pages**.
-2. Under "Build and deployment", set **Source: Deploy from a branch**.
-3. Branch: pick this branch (or `main` once merged) → folder `/ (root)` → **Save**.
-4. GitHub gives you a URL like `https://<user>.github.io/<repo>/`. Open it on
-   your phone (rotate to landscape for the best fit) and play. Every push to
-   that branch redeploys automatically within a minute or two — just reload.
+GitHub Pages is already configured (**Settings → Pages → Source: Deploy from
+a branch → `main` → `/ (root)`**) — no setup needed. GitHub gives you a URL
+like `https://<user>.github.io/<repo>/`. Open it on your phone (rotate to
+landscape for the best fit) and play. Every push to `main` redeploys
+automatically within a minute or two — just reload.
 
 Every internal script/import URL carries a `?v=...` cache-busting suffix
 (same value everywhere). GitHub Pages doesn't hash filenames on deploy, so
