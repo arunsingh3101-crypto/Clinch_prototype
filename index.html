@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#10141a" />
+  <title>Cinch — Prototype</title>
+  <script>
+    // Surfaces uncaught errors directly on the page. This is a phone-testable
+    // prototype with no devtools access most of the time — a silent blank
+    // screen is undiagnosable, this at least shows what broke.
+    window.addEventListener('error', function (e) {
+      showBootError((e.error && e.error.stack) || (e.message + ' (' + e.filename + ':' + e.lineno + ')'));
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      var r = e.reason;
+      showBootError('Unhandled promise rejection: ' + ((r && (r.stack || r.message)) || String(r)));
+    });
+    function showBootError(text) {
+      var el = document.getElementById('error-overlay');
+      if (!el) return; // body not parsed yet; shouldn't happen given script placement, but stay safe
+      el.style.display = 'block';
+      el.textContent += text + '\n\n';
+    }
+  </script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #10141a;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e8eef2;
+    }
+    #error-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(20, 0, 0, 0.95);
+      color: #ff8a8a;
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 16px;
+      overflow: auto;
+      white-space: pre-wrap;
+      touch-action: pan-y;
+    }
+    #game-container {
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      touch-action: none;
+    }
+
+    #menu-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      touch-action: pan-y;
+      padding: 24px 16px;
+      box-sizing: border-box;
+    }
+    #menu-panel {
+      width: 100%;
+      max-width: 420px;
+    }
+    #menu-panel h1 {
+      font-size: 22px;
+      margin: 0 0 2px;
+      letter-spacing: 0.02em;
+    }
+    #menu-panel .subtitle {
+      color: #8a97a3;
+      font-size: 13px;
+      margin: 0 0 20px;
+    }
+    .row {
+      margin-bottom: 16px;
+    }
+    .row label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+    .row .value {
+      color: #2ecc71;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #2ecc71;
+      height: 28px;
+    }
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1a2029;
+      border: 1px solid #2a323d;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .checkbox-row .label-block {
+      display: flex;
+      flex-direction: column;
+    }
+    .checkbox-row .label-block .title {
+      font-size: 14px;
+    }
+    .checkbox-row .label-block .desc {
+      font-size: 12px;
+      color: #8a97a3;
+    }
+    input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      accent-color: #2ecc71;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+    #start-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: #2ecc71;
+      color: #0b1410;
+      cursor: pointer;
+    }
+    #start-btn:active {
+      background: #27ae60;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #2a323d;
+      margin: 18px 0;
+    }
+    .section-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8a97a3;
+      margin: 0 0 10px;
+    }
+    .type-toggles {
+      display: flex;
+      gap: 8px;
+    }
+    .type-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      background: #1a2029;
+      border: 1px solid #2a323d;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+    }
+    .type-toggle input {
+      width: 20px;
+      height: 20px;
+      accent-color: #2ecc71;
+      margin: 0;
+    }
+    .hint {
+      font-size: 12px;
+      color: #8a97a3;
+      margin: 8px 0 0;
+      line-height: 1.4;
+    }
+    select {
+      width: 100%;
+      padding: 12px;
+      font-size: 14px;
+      background: #1a2029;
+      color: #e8eef2;
+      border: 1px solid #2a323d;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="error-overlay"></div>
+  <div id="menu-overlay">
+    <div id="menu-panel">
+      <h1>Cinch — Prototype</h1>
+      <p class="subtitle">Loop the trail around enemies to kill them. Tune knobs below, then start.</p>
+
+      <div class="checkbox-row">
+        <div class="label-block">
+          <span class="title">God mode</span>
+          <span class="desc">Take no damage — pure movement/trail testing</span>
+        </div>
+        <input type="checkbox" id="god-mode" />
+      </div>
+
+      <div class="checkbox-row">
+        <div class="label-block">
+          <span class="title">Enemy spawning</span>
+          <span class="desc">Turn off for an empty arena, just you and the trail</span>
+        </div>
+        <input type="checkbox" id="enemy-spawning" checked />
+      </div>
+
+      <hr />
+      <p class="section-label">Tuning knobs (Part 11)</p>
+
+      <div class="row">
+        <label>Player speed <span class="value" id="speed-value"></span></label>
+        <input type="range" id="speed-slider" min="100" max="350" step="10" value="220" />
+      </div>
+
+      <div class="row">
+        <label>Trail lifetime <span class="value" id="trail-value"></span></label>
+        <input type="range" id="trail-slider" min="2000" max="12000" step="500" value="6000" />
+      </div>
+
+      <div class="row">
+        <label>Min loop area <span class="value" id="looparea-value"></span></label>
+        <input type="range" id="looparea-slider" min="500" max="12000" step="100" value="4200" />
+      </div>
+
+      <div class="row">
+        <label>Player health <span class="value" id="health-value"></span></label>
+        <input type="range" id="health-slider" min="1" max="10" step="1" value="4" />
+      </div>
+
+      <hr />
+      <p class="section-label">Enemy testing</p>
+
+      <div class="row">
+        <label>Enemy types to spawn</label>
+        <div class="type-toggles">
+          <label class="type-toggle"><input type="checkbox" id="type-chaser" checked /> Chaser</label>
+          <label class="type-toggle"><input type="checkbox" id="type-shooter" checked /> Shooter</label>
+          <label class="type-toggle"><input type="checkbox" id="type-cutter" checked /> Cutter</label>
+        </div>
+        <p class="hint">Unchecking a type spawns it immediately when selected alone, instead of waiting for its normal wave phase — handy for isolating one enemy to test.</p>
+      </div>
+
+      <div class="row">
+        <label>Cutter targeting</label>
+        <select id="cutter-targeting">
+          <option value="nearest_to_player" selected>Nearest to player (recommended)</option>
+          <option value="trail_midpoint">Middle of trail</option>
+          <option value="nearest_to_cutter">Nearest to cutter (spec default — chases the tail)</option>
+        </select>
+      </div>
+
+      <button id="start-btn">Start</button>
+    </div>
+  </div>
+
+  <div id="game-container"></div>
+
+  <script src="./vendor/phaser.min.js?v=20260722a"></script>
+  <script type="module" src="./src/menu.js?v=20260722a"></script>
+</body>
+</html>
