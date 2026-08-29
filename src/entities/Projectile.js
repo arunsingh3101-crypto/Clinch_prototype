@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260725065836';
+import { CONFIG } from '../config.js?v=20260829114852';
 
 export default class Projectile {
   constructor(scene, x, y, dirX, dirY) {
