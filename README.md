@@ -1,9 +1,12 @@
-# Cinch — Prototype
+# Clinch — Prototype
 
-A browser-based prototype of **Cinch**: you leave a solid, decaying trail as
+A browser-based prototype of **Clinch**: you leave a solid, decaying trail as
 you move; closing that trail into a loop around enemies instantly kills
 everything inside it. No gun — the path *is* the weapon. Full design spec:
-[`docs/design-spec.md`](docs/design-spec.md).
+[`docs/design-spec.md`](docs/design-spec.md). Art pipeline:
+[`docs/art-pipeline.md`](docs/art-pipeline.md).
+
+The current title screen still says "Cinch" — a leftover name, not a second title.
 
 Built with [Phaser 3](https://phaser.io) (vendored locally, no build step,
 no external CDN dependency) so it runs as plain static files — easy to host
@@ -63,13 +66,11 @@ a run without editing code:
   type to exclude it; if only one type is left checked it spawns immediately
   rather than waiting for its normal wave phase, so you can isolate one
   enemy to test.
-- **Cutter targeting mode** — which trail point a cutter beelines for.
-  "Nearest to the cutter itself" (the literal spec phrasing) tends to
-  collapse onto the trail's abandoned tail in practice, since the tail sits
-  still while the head keeps moving with the player — frustrating to loop
-  in. Defaults to "nearest to the player" instead, which keeps cutters
-  engaged with the live part of the trail; "middle of trail" is a middle
-  ground. All three are selectable so you can compare directly.
+- **Cutter targeting mode** — playtest leftover. The locked design rule
+  (Part 7) is **nearest to the player** (the live line). The other two
+  modes (nearest to the cutter, middle of trail) remain on the start screen
+  so you can compare against the superseded tail-chasing phrasing; they are
+  not knobs in the spec.
 
 Hit **Start** to apply your settings and launch. To change them again,
 reload the page (settings aren't editable mid-run).
@@ -94,16 +95,20 @@ reload the page (settings aren't editable mid-run).
 - Closing a loop (trail head crossing the player's own live trail) kills
   every enemy whose center lies inside the enclosed polygon, then resets the
   whole trail. Loops below a minimum area are inert no-ops.
-- Five enemies, each with a distinct trail relationship: **Chaser** (pure
-  pursuit, blocked by the trail), **Shooter** (fires trail-blockable
-  projectiles), **Cutter** (passes through the trail and severs it from the
-  crossing point back to the tail), **Dormant** (inert ambusher — only
-  closes in while the player is within its activation band), **Fleer**
-  (always flees the player; gets trapped once cornered). Dormant and Fleer
-  are prototype tuning/testing additions beyond the design doc's core three.
+- Five enemies, each with a distinct trail relationship (design spec Part 7):
+  **Chaser** (pure pursuit, blocked by the trail), **Shooter** (fires
+  trail-blockable projectiles), **Cutter** (passes through the trail, severs
+  it from the cut back to the tail, seeks the live line nearest the player,
+  deals no contact damage), **Dormant** (inert ambusher — only closes in
+  while the player is within its activation band), **Fleer** (always flees
+  the player; gets trapped once cornered).
 - Superlinear (quadratic) scoring by enemies-caught-per-loop, plus a combo
-  multiplier for fast consecutive loops.
-- Phased, pulsed wave spawning that escalates over ~10 minutes, per Part 9.
+  multiplier for fast consecutive *qualifying* loops (empty fired loops
+  reset the trail but do not raise combo).
+- Phased, pulsed wave spawning that escalates over ~10 minutes. Part 9 now
+  gives Dormant and Fleer their own teaching beats (6–8 min / 8 min+); the
+  current spawner still folds them into the 4 min+ mix — a known gap against
+  the spec.
 - Health, hit invulnerability window, game-over screen with kill count and
   best combo, restart.
 - In-game pause (Resume / Return to Configuration) via native Phaser scene
@@ -135,4 +140,5 @@ src/scenes/GameScene.js  ties it all together — the main update loop
   not real pathfinding — good enough to read as "blocked by the trail" but
   not a nav-mesh.
 - Rendering is flat-colored rectangles ("cubes"/squares) and circles, exactly
-  per the spec's brief ("nothing but cubes and placeholder art").
+  per the spec's brief ("nothing but cubes and placeholder art"). A few
+  pipeline assets exist in `art/approved/` but are not loaded by the game.

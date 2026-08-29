@@ -1,7 +1,8 @@
-# Cinch — Prototype Design Specification
+# Clinch — Prototype Design Specification
 
 **Type:** Game design specification (pre-technical). **Engine- and language-agnostic.**
 **Status:** Locked and buildable. Everything in Parts 1–10 is confirmed. Part 11 lists deliberate tuning knobs. Part 12 is future work — **do not build it for the prototype.**
+**Revision:** Absorb playtest-locked findings (five-enemy roster, cutter live-line targeting) without opening Part 12. The player-facing title screen currently still says "Cinch"; that is a UI leftover, not a second name.
 
 ---
 
@@ -11,10 +12,12 @@ This is a *design* spec. It states what the game **does** — rules, behaviors, 
 
 Where a number could reasonably go either way, it appears in **Part 11 (Tuning Knobs)** as a value to dial in playtest — not as a fixed requirement.
 
-**The one question the prototype exists to answer:**
-> Is looping a moving chaser, while a shooter denies you ground and a cutter threatens your open line, *fun* for 10 minutes — with nothing but cubes and placeholder art?
+**Keeping this document honest:** if a playtest change alters a **rule** (who enemies are, how the cutter aims, what a loop does), edit this document in the same change. Playtest **harness** (god mode, pause, sliders) stays in the README — see Appendix B. Numbers stay in Part 11.
 
-If the answer is yes, the verb is real and the rest of the game is worth building. If no, no amount of content saves it. Build the minimum that answers this honestly.
+**The one question the prototype exists to answer:**
+> Is looping a moving chaser, while a shooter denies you ground, a cutter threatens your open line, a dormant ambushes mid-range, and a fleer refuses to herd, *fun* for 10 minutes — with nothing but cubes and placeholder art?
+
+If the answer is yes, the verb is real and the rest of the game is worth building. If no, no amount of content saves it. Build the minimum that answers this honestly. Generated art (see `docs/art-pipeline.md`) is a parallel track and is **not** required to answer this question; the running prototype stays cubes until the verb is proven.
 
 ---
 
@@ -35,7 +38,7 @@ Kite a pack into a cluster → carve an arc around them while under fire → cro
 
 - Top-down movement, moves freely in any direction at a set speed.
 - Leaves a continuous trail behind them at all times while moving.
-- **Survivability:** a small health pool (a few hits — see Part 11). Touching an enemy deals contact damage. After taking a hit, the player has a brief window of invulnerability so a single overlapping enemy cannot chain-drain them.
+- **Survivability:** a small health pool (a few hits — see Part 11). Touching an enemy that deals contact damage (every prototype enemy except the cutter — Part 7) hurts the player. After taking a hit, the player has a brief window of invulnerability so a single overlapping enemy cannot chain-drain them.
 - **No second weapon.** Movement and the trail are the *entire* offensive and defensive toolkit. This is a hard design commitment, not a placeholder — see Part 3 for why the player is never actually helpless.
 
 ---
@@ -50,7 +53,7 @@ The trail is the whole game. These rules are exhaustive.
 - **Readability:** older trail segments should visibly fade (e.g. grow more transparent) as they near expiry, so the player can read their remaining "budget" spatially.
 
 **Solidity — solid to threats, passable to the player.**
-- The trail is a **solid wall to enemies and to enemy projectiles.** It blocks their movement and their shots.
+- The trail is a **solid wall to enemies and to enemy projectiles.** It blocks their movement and their shots. (The cutter is the sole exception — Part 7.)
 - The trail is **passable to the player's own body.** The player can walk freely across their own trail. (Without this, closing a loop by crossing your own line would be impossible.)
 - Because the trail blocks projectiles, an *open, unclosed* trail is already useful defensively: the player can drop a line between themselves and a shooter and re-gather behind it. **The trail is never a dead weight, even before it closes.**
 
@@ -71,7 +74,7 @@ The trail is the whole game. These rules are exhaustive.
    - Every caught enemy is **instantly killed** (see Part 5). No health, no chip damage.
    - **The entire trail is consumed** — the loop boundary *and* any lead-in trail before the intersection point. The player redraws from zero. (This is "full reset," chosen over keeping the lead-in.)
    - **No lingering wall or hazard is left behind.** The fired boundary vanishes cleanly. (Lingering walls and damage-zones are reserved for future upgrades — Part 12.)
-5. **An empty-but-large-enough loop still fires and still resets the trail.** Drawing a big loop that catches nothing costs you your trail — a wasted loop has a real cost. This teaches "only close loops you mean to close."
+5. **An empty-but-large-enough loop still fires and still resets the trail.** Drawing a big loop that catches nothing costs you your trail — a wasted loop has a real cost. This teaches "only close loops you mean to close." An empty fired loop does **not** raise or refresh combo (Part 6); only a loop that catches at least one enemy is a qualifying loop.
 6. **The player's own position is irrelevant to resolution.** Being inside your own loop when it fires is harmless.
 
 ---
@@ -79,7 +82,7 @@ The trail is the whole game. These rules are exhaustive.
 ## 5. Kill model
 
 - Enclosing an enemy **kills it instantly** — a clean binary "pop." Enemies have **no health bars** and take **no partial damage**, ever. A loop either encloses an enemy's center (it dies) or it does not (it is untouched).
-- All three prototype enemies die on a **single** enclosure.
+- All five prototype enemies die on a **single** enclosure.
 - Enemy "toughness," for future enemy types, is expressed as *"requires N enclosures"* or *"requires a special condition"* (e.g. must be isolated) — never as a number chipped down over time. This keeps every kill a discrete, readable event. (No such tough enemies exist in the prototype.)
 
 ---
@@ -89,12 +92,12 @@ The trail is the whole game. These rules are exhaustive.
 - **Reward scales superlinearly with the number of enemies caught in one loop** — roughly quadratic. Five enemies in one loop are worth dramatically more than five separate one-catch loops. This single relationship is what forces the core fantasy: herd the pack, then close one fat loop.
 - The scaling is **bounded (quadratic-ish), not exponential** — otherwise the optimal play collapses into "kite forever, gather a huge mass, one god-loop." Decay and enemy pressure already discourage that; the reward curve must not encourage it.
 - **Reward does not scale with enclosed area.** Area's only roles are the fire threshold (Part 4) and the emergent risk of a bigger loop (more time exposed). Rewarding area would pay players for drawing big empty circles.
-- **Combo multiplier.** Closing your next qualifying loop within a few seconds of the last raises a multiplier (×1 → ×1.5 → ×2 → …). The multiplier decays if you stall. This deliberately rewards staying aggressive during the exposed reset window and fights the instinct to turtle.
+- **Combo multiplier.** Closing your next *qualifying* loop (one that caught ≥1 enemy) within a few seconds of the last raises a multiplier (×1 → ×1.5 → ×2 → …). The multiplier decays if you stall. Empty fired loops do not qualify. This deliberately rewards staying aggressive during the exposed reset window and fights the instinct to turtle.
 - **In the prototype, "reward" is just score plus a kill counter.** There is no XP, currency, or upgrade economy yet. (Later, this same number feeds progression and capture rarity — Part 12.)
 
 ---
 
-## 7. Enemies — the prototype's three
+## 7. Enemies — the prototype's five
 
 Each enemy has a **distinct relationship to the trail.** That relationship is its identity.
 
@@ -102,23 +105,30 @@ Each enemy has a **distinct relationship to the trail.** That relationship is it
 |---|---|---|
 | Chaser | Yes — paths around it | The herding engine |
 | Shooter | Yes — paths around it; its shots are blocked too | Denies camping |
-| Cutter | **No — passes through and destroys it** | The anti-verb |
+| Cutter | **No — passes through and destroys it** | The anti-verb (trail threat, not a body-check) |
+| Dormant | Yes — paths around it while active | Mid-range ambusher |
+| Fleer | Yes — paths around it | Anti-herd — you trap it, it does not kite into a pack |
 
 **Chaser.** Pure pursuit — homes directly on the player. Moves *slower than the player*, so it is always kiteable. Because a group all homes on the same target, a pack naturally clumps behind you as you circle — this is your primary tool for building a fat loop. Deals contact damage. Blocked by the trail. Dies on a single enclosure.
 
-**Shooter.** Stationary or slow. Fires an aimed projectile at the player on a cadence. The projectile is **blocked by the trail** (so the player can shield behind their own line). Its job is to punish camping — you cannot stand still to draw a tidy loop. Deals contact damage if touched. Blocked by the trail. Dies on a single enclosure.
+**Shooter.** Stationary or slow. Fires an aimed projectile at the player on a cadence, but not if the player is inside a minimum range (Part 11) — melee-range turrets are absurd, not a lesson. The projectile is **blocked by the trail** (so the player can shield behind their own line). Its job is to punish camping — you cannot stand still to draw a tidy loop. Deals contact damage if touched. Blocked by the trail. Dies on a single enclosure.
 
 **Cutter — the anti-verb.** The one enemy that ignores the trail-wall: it passes *through* the trail, and doing so **severs** it.
-- **AI:** beeline for the nearest point of the player's live open trail and cross it. If the player has no meaningful trail (e.g. just after a reset), pursue the player directly.
+- **AI:** beeline for the live-trail point **nearest the player** (the part of the line the player is still drawing) and cross it. Targeting "the nearest point of the trail" from the cutter's own position is **wrong** — that collapses onto the abandoned tail, because the tail sits still while the head keeps moving with the player. If the player has no meaningful trail (e.g. just after a reset), pursue the player directly.
 - **Sever behavior — partial.** When a cutter crosses the trail, it destroys the trail from the crossing point **back to the tail** (the older portion). Only the fresh segment from the crossing to the head survives. This ruins the loop the player was mid-drawing (their anchor is gone) but lets them keep drawing immediately. It does **not** wipe the whole trail.
-- Net effect: the cutter is a **timing threat.** It forces the player to either close fast, or route so the open line stays away from it. A cutter can itself be enclosed and killed like anything else — if you can loop it before it reaches your line.
+- **No contact damage.** The cutter is a trail threat, not a body-check. Touching it does not hurt the player. It can still be enclosed and killed like anything else — if you can loop it before it reaches your line.
+- Net effect: the cutter is a **timing threat.** It forces the player to either close fast, or route so the open line stays away from it.
+
+**Dormant — the mid-range ambusher.** Treats the trail as a wall, same as a chaser, but only while *active*. It sits still outside an activation band around itself: too far and it is inert, too close and it goes still again, and only in the band between does it close in on the player. While active it uses the same pursuit-and-slide as a chaser. Deals contact damage. Dies on a single enclosure. Active vs. inert must be readable at a glance (the player has to see that a parked cube just became a chase). Net effect: parked threats are not safe, crowding them is a real (if brief) answer, and you cannot treat the whole arena as uniformly hostile.
+
+**Fleer — the anti-herd.** Treats the trail as a wall. Always runs directly away from the player. Slightly faster than a chaser, still slower than the player. Deals contact damage. Dies on a single enclosure. You do **not** kite a fleer into a pack the way you kite chasers — it will not follow. The play is to **cut off its escape** with the trail and the arena walls, then loop it once it is cornered. Net effect: some enemies refuse the herding fantasy, so the trail is also a fence, not only a lasso.
 
 ---
 
 ## 8. Arena and run structure (prototype)
 
 - **One persistent arena**, single open box. **Outer walls only — no interior geometry.**
-- The outer wall **bounds player movement but is not a loop boundary.** Loops close by pure self-intersection only; touching the wall does nothing. (This keeps every loop fully player-drawn and unambiguous.)
+- The outer wall **bounds every actor** (player and enemies) **but is not a loop boundary.** Loops close by pure self-intersection only; touching the wall does nothing. (This keeps every loop fully player-drawn and unambiguous.)
 - **Endless, escalating waves** in that one box. No rooms, no transitions.
 - **No boss, no upgrades, no win state.** The player plays until they die. The kill counter and combo score are the entire chase. The "10 minutes" is your evaluation window, not a designed cap.
 
@@ -135,10 +145,11 @@ This single-arena, wave-based shape is chosen specifically to respect the solo-d
 | 0–2 min | Chasers only, low density | Herd a pack, close a loop |
 | 2–4 min | + Shooters | Loop on the move; shield behind your line |
 | 4–6 min | + Cutters | Close fast; keep your open line away from threats |
-| 6 min → | All three, rising density and spawn cadence | Juggle all pressures; the optimal shape keeps shifting |
+| 6–8 min | + Dormants | Parked threats are not safe; entering a band wakes them, crowding them shuts them off |
+| 8 min → | + Fleers, then rising density of all five | Some enemies will not herd — corner them with trail + walls; juggle all pressures |
 
 - **Spawn model — pulsed with short lulls**, *not* a constant trickle. The lull is what lets the player gather a pack into a fat loop; it is kept short enough that the combo timer can bridge it if the player keeps looping stragglers. This serves both the gather-a-big-loop beat and the combo-flow beat.
-- **Escalation scales density, enemy mix, and spawn cadence only.** Per-enemy stats (speed, fire rate, etc.) stay **constant** across the run. This isolates the variable under test — "is the verb fun as *pressure* rises?" — and keeps the build honest and debuggable.
+- **Escalation scales density, enemy mix, and spawn cadence only.** Per-enemy stats (speed, fire rate, activation band, etc.) stay **constant** across the run. This isolates the variable under test — "is the verb fun as *pressure* rises?" — and keeps the build honest and debuggable.
 - **Failure state:** the player's health reaching zero ends the run → show final kill count and best combo → offer restart. No revives. No dynamic difficulty / rubber-banding — a fixed, time-based ramp tells you honestly whether the curve itself is fun.
 
 ---
@@ -148,7 +159,7 @@ This single-arena, wave-based shape is chosen specifically to respect the solo-d
 The prototype has succeeded if, playing with cubes and no upgrades, a session is *hard to put down* and:
 - The player is routinely choosing to **herd and commit to bigger loops** rather than spamming tiny ones (Law 2 holds in practice, not just on paper).
 - The **reset-after-fire window feels like tension, not dead time** — the player is actively kiting and shielding, never just waiting.
-- The **enemy mix genuinely changes the ideal shape** — a wave heavy on cutters plays differently from one heavy on shooters.
+- The **enemy mix genuinely changes the ideal shape** — a wave heavy on cutters plays differently from one heavy on shooters; dormants change when a parked cube is a threat; fleers force you to fence rather than kite.
 - Deaths feel *earned* (a sloppy route, a greedy loop), not random.
 
 If any of these fail, that is the signal — tune the knobs in Part 11 before adding anything from Part 12.
@@ -166,8 +177,10 @@ These are *numbers*, not design ambiguities. Expect to dial them in-engine. The 
 - **Combo timer window** and the **multiplier curve** (how fast it climbs, how fast it decays).
 - **Reward curve steepness** (how sharply count-of-enemies superlinearly scales).
 - **Spawn cadence, per-wave density, and the density ramp rate.**
-- **Per-enemy constants:** chaser speed (must stay below player), shooter fire rate and projectile speed, cutter speed.
+- **Per-enemy constants:** chaser speed (must stay below player); shooter fire rate, projectile speed, and minimum fire range; cutter speed; dormant speed (must stay below player) and activation-band min/max distance; fleer speed (faster than chaser, still below player).
 - **Starter-stub length** — how much trail (if any) the player keeps on reset. **Default 0.** A cushion to raise only if the reset window playtests as helpless exposure.
+
+Cutter *targeting* is not a knob. The live-line rule in Part 7 is locked. Alternate targeting modes in the prototype build are harness only (Appendix B).
 
 **Optional difficulty mode (trivial to add):** *Hard mode = health of 1* (one-hit death). Selectable from options. Not the default.
 
@@ -176,6 +189,8 @@ These are *numbers*, not design ambiguities. Expect to dial them in-engine. The 
 ## 12. Future / out of scope — **do not build for the prototype**
 
 Everything below is deliberately excluded from the prototype. It is recorded here so the locked core rules above never contradict it later. None of it is required to answer the prototype's one question.
+
+Dormant and Fleer are **in** the prototype roster (Part 7). They are not the future types listed below.
 
 ### Near-future features (built only after the verb is proven)
 
@@ -196,21 +211,36 @@ Everything below is deliberately excluded from the prototype. It is recorded her
 
 - **Double-edged-sword trail power** — a power that does something unique with the trail but also harms or affects the player. Later levels only.
 - **Tower-defense mode** — claimed loops become decaying walls; defend an objective between waves. A future *mode*, never the default (turtling kills the verb).
-- **Additional enemies** beyond the prototype three, from the established taxonomy: **splitters** (punish lazy loops), **armored** (need double-enclosure — the "cracked" state persists on the enemy across trail resets), **orbiters** (too fast for a conventional lasso; judged on the closing snapshot like everything else).
+- **Additional enemies** beyond the prototype five, from the established taxonomy: **splitters** (punish lazy loops), **armored** (need double-enclosure — the "cracked" state persists on the enemy across trail resets), **orbiters** (too fast for a conventional lasso; judged on the closing snapshot like everything else). Dormant and Fleer are not these.
 - **Full-game structure — deliberately undecided.** Whether the full game is an open arena, room-to-room, or waves is **left open on purpose**: once stealth, capturing unique characters, and story/characters enter, the game evolves in gameplay and design, so committing now is premature. Every locked verb rule above is structure-agnostic (works in an arena, in rooms, or in waves), so deferring this costs nothing. Revisit after the prototype validates the verb and after A/B's implications have themselves been prototyped.
 
 ---
 
-## Appendix — one-line rule reference
+## Appendix A — one-line rule reference
 
 - Trail decays by **time** (~6s), the master knob.
-- Trail is **solid to enemies and projectiles, passable to the player.**
+- Trail is **solid to enemies and projectiles, passable to the player** (cutter is the sole wall exception).
 - Loops close by **self-intersection only.**
 - A loop fires only if it encloses **≥ a minimum area**; below that, nothing happens.
 - Caught = enemy **center inside the polygon at the instant of close.**
 - Enclosing = **instant kill** (no health bars).
 - On fire, the **whole trail resets to zero**; no lingering wall in the base game.
+- Empty fired loops still reset the trail and **do not** raise or refresh combo.
 - Reward scales **superlinearly with enemy count per loop**, not area.
-- **Combo** multiplier rewards fast consecutive loops.
-- **Chaser** herds, **shooter** denies camping, **cutter** severs your open line (partial, from cut to tail) and is the only enemy the wall does not stop.
-- **One arena**, walls-only, endless escalating pulsed waves; die at 0 HP.
+- **Combo** multiplier rewards fast consecutive *qualifying* loops (caught ≥1).
+- **Chaser** herds; **shooter** denies camping; **cutter** severs the live line (partial, cut-to-tail) and deals no contact damage; **dormant** ambushes in a mid-range band; **fleer** always flees and must be cornered.
+- **One arena**, walls bound every actor, endless escalating pulsed waves; die at 0 HP.
+
+---
+
+## Appendix B — Prototype harness (not design)
+
+The running prototype has playtest-only controls that are **not** locked verb rules. They live in the README, not in Parts 1–10:
+
+- Start-screen sliders for a subset of Part 11 knobs.
+- God mode, enemy-spawning toggle, and per-type spawn filters.
+- Alternate cutter targeting modes (nearest-to-cutter, trail midpoint) — leftovers for comparing the superseded tail-chasing phrasing against the locked live-line rule.
+- In-game pause and "return to configuration."
+- Cache-busting / version self-heal, on-page error overlay — deployment concerns, not design.
+
+If a harness control changes a *rule*, promote that rule into Parts 1–10 (as cutter live-line targeting was) and demote the control to "testing override." Do not let the start screen become a second spec.

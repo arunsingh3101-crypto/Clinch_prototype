@@ -75,24 +75,43 @@ assembled from the templates in `prompts/templates.md` for the asset's `class`
 
 ### Stage 2 — Generate (Grok)
 
-Input: the stage-1 prompt + params (`size`, `seed`, `n`).
+Input: the stage-1 prompt + the manifest entry's `generate` block.
 Output: one or more raw candidates in `art/generated/<asset-id>/`.
 
 This is the **only** stage bound to a specific image model. It is isolated
 behind a single seam (`generate()` in the orchestrator) so Grok can be replaced
-without touching stages 1, 3, or 4. Params that matter for consistency:
-- **seed** — lock per asset-family so variants stay on-style.
-- **size** — always generate at ≥2× the target and downscale in stage 3;
-  small game assets come out crisper this way.
-- reference-image conditioning — use where the generator supports it, to pin a
-  family (e.g. all five enemy variants) to one look.
+without touching stages 1, 3, or 4.
+
+The current Grok image tool has **no native seed or size knobs.** Map the
+manifest onto what it actually accepts, and do not pretend otherwise:
+
+- **size / oversample** — there is no pixel-size param. Map `spec` width/height
+  to the nearest aspect-ratio enum, and map `generate.oversample` onto the
+  tool's resolution enum (`1k` / `2k`). Real oversampling is still "generate
+  above target, downscale in stage 3."
+- **seed** — cannot be locked numerically. Record the requested seed in
+  provenance as *intent*, not as a guarantee. Family coherence comes from the
+  shared style-bible preamble plus `generate.reference` (pass an already-
+  approved sibling via reference-image edit). Mention the family in the prompt
+  ("same design language as the other enemy tokens").
+- **`generate.n` (opt-in batch)** — omit it, or leave it at 1, unless subject
+  variance is a known risk. When `n > 1`, look at the whole batch *before*
+  conform, pick the winner on subject/style fit to `intent` (ignore pixel-level
+  spec issues; conform will fix those), and keep only that winner. The batch
+  counts as **one** attempt against `max_attempts`.
+- **tiling backgrounds** — must not request a vignette or directional gradient.
+  A vignette cannot wrap. The background template in `prompts/templates.md`
+  already makes this conditional on `tiling`.
 
 ### Stage 3 — Conform (deterministic, `conform.py`)
 
 No AI. Idempotent. Turns a raw candidate into a spec-exact canonical asset:
 
-1. **Background removal / alpha** — `rembg` when available, else chroma/flood
-   knock-out; verify a real alpha channel exists where the spec requires it.
+1. **Background removal / alpha** — `rembg` is **required**, not optional. The
+   corner-color-distance fallback only holds up on flat, hard-edged sprites on
+   a near-uniform backdrop; on anything painterly or detailed it leaves a muddy
+   semi-transparent cutout. Verify a real alpha channel exists where the spec
+   requires it.
 2. **Trim + pad** — crop to the opaque bounding box, then pad to the target
    canvas so the pivot is stable.
 3. **Resize** — to the manifest's exact `width`×`height`. Nearest-neighbour for
@@ -131,7 +150,7 @@ Then it **routes** — the formal version of "auto-edit vs. unusable":
 
 | Shortcoming of raw image-gen | Where it's handled |
 |---|---|
-| Inconsistency across a set | style-bible preamble in every prompt (S1) + seed/reference locking per family (S2) |
+| Inconsistency across a set | style-bible preamble in every prompt (S1) + reference-image conditioning per family (S2); numeric seed is intent-only on the current generator |
 | Non-seamless tiles | seamless-tile fix (S3) + tiling score gate (S4) |
 | Wrong dimensions / pivots | resize to spec + trim/pad (S3); pivot/ppu in `.meta.json` |
 | Missing transparency | bg-removal + alpha verify (S3/S4) |
@@ -159,17 +178,36 @@ stage are untouched.
 
 ## 6. Provenance & reproducibility
 
-Every approved asset's `.meta.json` records the prompt, model, seed, params,
-conform settings, and pipeline version that produced it. Regenerating an asset
-on-style later (or explaining why two assets match) is then deterministic rather
-than folklore. Approved assets are versioned in git alongside the code.
+Every approved asset's `.meta.json` records the prompt, model, requested seed
+(intent, not a lock on the current generator), params, conform settings, and
+pipeline version that produced it. Regenerating an asset on-style later (or
+explaining why two assets match) is then a recorded decision rather than
+folklore. Approved assets are versioned in git alongside the code. The
+`.meta.json` sidecar is part of the contract — a PNG in `art/approved/` without
+one is incomplete.
 
 ---
 
 ## 7. Where this lives now
 
 Per the decision to prove it on Clinch first, the spine lives in this repo under
-`art/pipeline/`. Once it has produced a real Clinch asset set end-to-end, lift
+`art/pipeline/`. The four-stage loop has now produced a real end-to-end pass
+for three Clinch assets (`arena-floor`, `grid-tile`, `enemy-chaser`) into
+`art/approved/`. Once the rest of the Clinch set is through the same loop, lift
 `art/pipeline/` + the `art-director` skill into a standalone repo/skill and have
 each game depend on it — the per-game `style-bible.json` + `manifest.json`
 contract means nothing about the games changes when it moves.
+
+**Current Clinch status (honest, not aspirational):**
+
+- Gameplay is still cubes, per the prototype question in `docs/design-spec.md`.
+  Approved PNGs are **not yet consumed** by the Phaser game. Wiring them in is a
+  later art-integration step, not a pipeline-design change.
+- `assets/menu-background.jpg` is a one-off, not a pipeline asset — it is not
+  in `art/manifest.json` and has no `.meta.json`.
+- The three approved PNGs are currently missing their `.meta.json` sidecars.
+  That is a completeness gap against this document's contract, not a change to
+  the contract.
+- Manifest entries `loop-close-glow` and `title-keyart` have not been produced
+  yet. The style bible already includes Dormant and Fleer colours; those enemy
+  sprites are not in the manifest yet.
