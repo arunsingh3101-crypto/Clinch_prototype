@@ -1,0 +1,48 @@
+{
+  "game": "clinch",
+  "style_bible": "style-bible.json",
+  "pipeline_version": "0.1.0",
+  "assets": [
+    {
+      "id": "arena-floor",
+      "class": "background",
+      "intent": "a dark abstract top-down arena floor: subtle geometric grid texture with faint circuit-like etching, very low contrast",
+      "spec": { "width": 1024, "height": 1024, "tiling": true, "palette_snap": false, "pixels_per_unit": 100 },
+      "generate": { "oversample": 2, "seed": 101 },
+      "accept": { "tiling_edge_diff_max": 8, "visual_check": true }
+    },
+    {
+      "id": "loop-close-glow",
+      "class": "sprite",
+      "intent": "a soft symmetrical radial glow, bright green core fading to fully transparent edges, no banding",
+      "spec": { "width": 512, "height": 512, "transparent": true, "palette_snap": false, "pivot": [0.5, 0.5] },
+      "generate": { "oversample": 2, "seed": 202 },
+      "accept": { "require_alpha": true, "visual_check": true }
+    },
+    {
+      "id": "enemy-chaser",
+      "class": "sprite",
+      "intent": "a compact aggressive top-down enemy token, angular arrow-like silhouette pointing forward, single flat red body",
+      "family": "enemies",
+      "spec": { "width": 64, "height": 64, "transparent": true, "palette_snap": true, "pixels_per_unit": 64 },
+      "generate": { "oversample": 4, "seed": 300, "n": 3 },
+      "accept": { "require_alpha": true, "palette_delta_e_max": 12, "visual_check": true }
+    },
+    {
+      "id": "grid-tile",
+      "class": "tileset",
+      "intent": "a single modular arena floor tile: minimal dark panel with a thin neon-accented seam along one edge, designed to repeat as a kit alongside the arena floor background",
+      "spec": { "width": 128, "height": 128, "tiling": true, "palette_snap": false, "pixels_per_unit": 128 },
+      "generate": { "oversample": 4, "seed": 505, "n": 3 },
+      "accept": { "tiling_edge_diff_max": 8, "visual_check": true }
+    },
+    {
+      "id": "title-keyart",
+      "class": "keyart",
+      "intent": "title-screen key art: a lone green trail looping around dark angular shapes on a near-black field, dramatic negative space, room for a title",
+      "spec": { "width": 1920, "height": 1080, "palette_snap": false },
+      "generate": { "oversample": 1, "seed": 404 },
+      "accept": { "visual_check": true }
+    }
+  ]
+}
