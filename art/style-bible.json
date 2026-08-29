@@ -1,0 +1,37 @@
+{
+  "game": "clinch",
+  "one_line": "A minimalist top-down arena game where your decaying trail is the weapon; neon actors on a near-black field.",
+  "camera": "strict top-down / orthographic, no perspective, no cast shadows",
+  "style_words": [
+    "flat", "minimal", "clean vector-like shapes", "neon accents",
+    "high readability", "low-contrast background", "subtle grain"
+  ],
+  "mood": "cool, tense, focused; the background recedes so gameplay elements pop",
+  "palette": {
+    "background": "#10141a",
+    "grid_line": "#3a4552",
+    "player": "#2ecc71",
+    "trail": "#2ecc71",
+    "enemy_chaser": "#e74c3c",
+    "enemy_shooter": "#f39c12",
+    "enemy_cutter": "#9b59b6",
+    "enemy_dormant": "#3498db",
+    "enemy_fleer": "#1abc9c",
+    "projectile": "#f1c40f",
+    "ui_text": "#e6edf3"
+  },
+  "palette_notes": "Enemy TYPE is read by colour — colour coding is load-bearing gameplay, not decoration. Generated actors must snap to these exact hexes.",
+  "resolution_targets": {
+    "sprite_actor_px": 64,
+    "icon_px": 64,
+    "tile_px": 128,
+    "background_px": 1024,
+    "keyart_px": 1920
+  },
+  "negatives": [
+    "no text", "no watermark", "no logos", "no UI chrome unless asked",
+    "no perspective", "no hard cast shadows", "no photorealism",
+    "no busy focal points in backgrounds", "no humans/creatures unless asked"
+  ],
+  "notes": "Actors render at ~20-26px in the current prototype; the final game may scale these up. Keep silhouettes readable at small sizes — strong single-colour shapes over fine detail."
+}
