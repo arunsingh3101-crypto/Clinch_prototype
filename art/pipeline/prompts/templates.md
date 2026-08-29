@@ -24,16 +24,26 @@ Then the class template appends the subject + format + class-specific negatives.
 ```
 SUBJECT: {intent}.
 Format: {width}x{height}px. {"Seamless tiling, edges must wrap." if tiling}
-Even ambient lighting, gentle vignette. No characters, no text, no bright
-focal points.
+{"Flat, uniform lighting across the whole frame — no vignette, no directional
+gradient; a vignette cannot tile seamlessly." if tiling else
+"Even ambient lighting, gentle vignette."}
+No characters, no text, no bright focal points.
 ```
 
 ### tileset
 ```
-SUBJECT: {intent}, designed as a repeating tile.
+SUBJECT: {intent} — a texture fill, not an object, icon, or framed graphic;
+content must extend uniformly to all four edges, nothing centered, nothing
+bordered. Do NOT draw a border, frame, window, or outline around the edge of
+the image.
 Format: {width}x{height}px, SEAMLESS — top edge matches bottom, left matches
 right. Uniform lighting, no directional shadow, no single focal element.
 ```
+Models read "repeating tile" + wording like "seam" or "kit" as an invitation
+to draw a bordered UI panel/frame rather than an edge-to-edge texture — the
+explicit "texture fill, not framed graphic" + border negative above exists
+specifically to head that off. If a tileset candidate comes back as a frame,
+this is the first thing to check, not `make_seamless`.
 
 ### sprite  (actors, fx, tokens)
 ```
@@ -72,3 +82,20 @@ room reserved for a title if noted}. On-style with the palette. No text/logos.
 - **Revision on `regenerate`**: when stage 4 routes back, adjust the *subject*
   and constraints (not the preamble) — e.g. "simpler silhouette", "less
   detail", "stronger single colour" — then re-issue.
+- **Vignette vs. tiling**: a vignette is a global bright-center/dark-edge
+  gradient, which by construction cannot wrap seamlessly — never ask for one
+  on a `tiling: true` asset (see the conditional in the `background`
+  template above). A tiling seam that looks wrong is more often this prompt
+  contradiction than a bad conform pass — check the prompt before re-tuning
+  `make_seamless`.
+- **`palette_snap` vs. low-contrast/subtle assets**: `palette_snap` maps
+  every pixel to the *nearest* of a handful of saturated, load-bearing style-
+  bible colours (enemy-type coding, UI accents). On a deliberately faint,
+  low-contrast texture, "nearest" is usually the background swatch, so every
+  pixel — including the actual detail — collapses to one flat colour and the
+  asset comes back visually empty. Reserve `palette_snap: true` for assets
+  where a hard color *is* the semantic signal (actor/enemy sprites, icons);
+  leave it `false` for backgrounds, tilesets, atmospheric fx, and anything
+  else whose whole point is a subtle gradient or faint texture. If a
+  conformed candidate comes back suspiciously flat, check this flag before
+  suspecting the generator.

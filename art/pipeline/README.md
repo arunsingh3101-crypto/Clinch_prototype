@@ -27,8 +27,15 @@ python adapters/unity.py  --library ../approved --dest ../../unity/Assets/Art
 ## Setup
 
 ```bash
-pip install -r requirements.txt   # add rembg for best background removal
+pip install -r requirements.txt
 ```
+
+Includes `rembg[cpu]` for background removal — required, not optional: the
+fallback used in its absence (a corner-color-distance heuristic) only holds
+up on flat, hard-edged sprites on a near-uniform backdrop. On anything
+painterly, organic, or detailed it leaves a muddy, heavily semi-transparent
+cutout. `rembg`'s first run downloads a ~1GB model, so expect a one-time
+delay.
 
 ## Run one asset by hand (stages 3–4)
 

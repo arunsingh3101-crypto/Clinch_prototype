@@ -26,11 +26,48 @@ unusable and must be escalated rather than faked.
    `generate.oversample`× the target size. Reuse a `family`'s seed/reference so
    variants match.
 
-2. **Generate.** Call the Grok image-generation MCP tool with the prompt, size,
-   seed, and `n`. Save candidates to `art/generated/<id>/`.
-   *Seam:* the exact tool name comes from the grok-image MCP server. If it is
-   not connected, say so and stop — do not invent assets. Everything downstream
-   is model-agnostic.
+2. **Generate.** Call `mcp__grok-image-mcp__generate_image` with the prompt.
+   *Seam:* this is the only model-specific call in the pipeline; everything
+   downstream is model-agnostic. If `get_configuration_status` reports no
+   token/session, say so and stop — do not invent assets.
+   Map the manifest's `generate` block onto the tool's actual parameters
+   (it has no `size`/`seed` knobs — those are approximated):
+   - `spec.width`/`spec.height` → nearest `aspectRatio` enum (e.g. 1024x1024 →
+     `"1:1"`, 1920x1080 → `"16:9"`).
+   - `generate.oversample` → `resolution` (`"1k"` for oversample ≤2,
+     `"2k"` for oversample ≥3) — real oversampling is achieved by generating
+     above target and letting stage 3 downscale, not by a literal size param.
+   - `generate.n` → `numberOfImages`. **Opt-in, per asset** — omit it from a
+     manifest entry (or leave it at the schema default of 1) and behaviour is
+     unchanged. Only set `n > 1` on entries where subject variance is a known
+     risk (e.g. an abstract background with no strong subject anchor); don't
+     default it high pipeline-wide, it multiplies generation cost per asset.
+     Without a seed param, this is the practical lever for variance: batch
+     `n` independent draws in one call is cheaper (fewer round-trips) and
+     strictly more informative than the same `n` draws spent one at a time
+     across sequential `regenerate` verdicts.
+   - **Picking the winner when `n > 1`.** Look at all `n` candidates together
+     before conform runs on any of them. Judge purely on subject/style fit to
+     the `intent` (conform will fix pixel-level spec issues later, so ignore
+     those here) — pick the closest match, and note in one line why the
+     others were passed over. Copy only the winner into
+     `art/generated/<id>/<n>.png`; the rejected candidates are not saved.
+     The whole batch counts as a single attempt against `max_attempts` — if
+     none of the `n` are usable, that's one `regenerate`, not `n` of them.
+   - `generate.seed` — the tool has no seed param, so it cannot be locked
+     numerically. Record the requested seed in provenance anyway (for
+     reproducibility intent) and rely on the shared style-bible preamble +
+     prompt text for family coherence instead (mention the family explicitly
+     in the prompt, e.g. "same design language as the other enemy tokens").
+     Note this is a *different* problem from subject variance: batching `n`
+     helps one asset land on-subject, it does not make independent assets in
+     a `family` match each other. For that, prefer `generate.reference` below.
+   - `generate.reference` → pass the referenced approved asset's path via
+     `edit_image`'s/`continue_editing`'s `referenceImages` instead of
+     `generate_image`, when an actual reference image exists on disk — this
+     is the real family-coherence lever in the absence of a seed.
+   The tool saves the file itself; call `get_last_image_info` to get its path,
+   then copy it into `art/generated/<id>/<n>.png` (create the directory).
 
 3. **Conform.** Run `art/pipeline/conform.py` for the asset. It makes the
    candidate spec-exact (bg-removal, trim/pad, resize, palette-snap, seamless).

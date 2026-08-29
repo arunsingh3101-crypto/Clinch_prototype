@@ -1,5 +1,11 @@
-# Stage 3/4 deterministic image ops. Pillow is required; the rest sharpen results.
+# Stage 3/4 deterministic image ops.
 Pillow>=10.0
 numpy>=1.24
-# Optional but recommended for clean background removal:
-# rembg>=2.0
+# Background removal (conform.py's remove_background). Required, not optional:
+# the corner-color-distance fallback used when this is absent only works for
+# flat, hard-edged sprites on a near-uniform backdrop (fine for Clinch-style
+# flat vector art) — on painterly/organic/detailed content it leaves a muddy,
+# heavily semi-transparent cutout (~40% partial-alpha observed in testing,
+# vs. ~4% with rembg). The [cpu] extra pulls a working onnxruntime backend;
+# bare `rembg` alone raises "No onnxruntime backend found" at runtime.
+rembg[cpu]>=2.0

@@ -92,18 +92,26 @@ def palette_snap(img: Image.Image, palette, tol: int = 999) -> Image.Image:
 
 
 def make_seamless(img: Image.Image) -> Image.Image:
-    """Offset by half, blend the seam so opposite edges match. Cheap but effective."""
+    """Offset by half, blend the seam so opposite edges match. The blend
+    itself must not become a visible seam: taper it smoothly (raised-cosine)
+    from full strength at the exact new seam down to zero at the band edge,
+    rather than a flat-weight hard-edged stripe."""
     if np is None:
         return img
     arr = np.array(img.convert("RGBA")).astype(float)
     h, w = arr.shape[:2]
     rolled = np.roll(np.roll(arr, w // 2, axis=1), h // 2, axis=0)
-    # feather a band around the new central seam toward the rolled copy
-    mask = np.zeros((h, w), float)
-    band = max(4, w // 32)
-    mask[h // 2 - band:h // 2 + band, :] = 1
-    mask[:, w // 2 - band:w // 2 + band] = 1
-    mask = mask[:, :, None]
+
+    band = max(8, min(w, h) // 16)
+
+    def taper(size: int, center: int, band: int) -> "np.ndarray":
+        d = np.minimum(np.abs(np.arange(size) - center), band)
+        return 0.5 * (1 + np.cos(np.pi * d / band))
+
+    fx = taper(w, w // 2, band)
+    fy = taper(h, h // 2, band)
+    mask = np.maximum(fx[None, :], fy[:, None])[:, :, None]
+
     blended = arr * (1 - mask * 0.5) + rolled * (mask * 0.5)
     return Image.fromarray(blended.astype("uint8"), "RGBA")
 
