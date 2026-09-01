@@ -1,17 +1,17 @@
-import { CONFIG } from '../config.js?v=20260901134553';
-import ArenaSim from '../core/ArenaSim.js?v=20260901134553';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901134553';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901134553';
-import Sheep from '../entities/enemies/Sheep.js?v=20260901134553';
-import Dog from '../story/Dog.js?v=20260901134553';
-import Npc from '../story/Npc.js?v=20260901134553';
-import NpcReaction from '../systems/NpcReaction.js?v=20260901134553';
-import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901134553';
-import SneakMode from '../player/capabilities/SneakMode.js?v=20260901134553';
-import CutResidue from '../player/capabilities/CutResidue.js?v=20260901134553';
-import ScriptSequence from '../story/ScriptSequence.js?v=20260901134553';
-import { LEVEL_1 } from '../story/levels/level1.js?v=20260901134553';
-import { EXIT_CRITERIA, evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901134553';
+import { CONFIG } from '../config.js?v=20260901135929';
+import ArenaSim from '../core/ArenaSim.js?v=20260901135929';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901135929';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901135929';
+import Sheep from '../entities/enemies/Sheep.js?v=20260901135929';
+import Dog from '../story/Dog.js?v=20260901135929';
+import Npc from '../story/Npc.js?v=20260901135929';
+import NpcReaction from '../systems/NpcReaction.js?v=20260901135929';
+import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901135929';
+import SneakMode from '../player/capabilities/SneakMode.js?v=20260901135929';
+import CutResidue from '../player/capabilities/CutResidue.js?v=20260901135929';
+import ScriptSequence from '../story/ScriptSequence.js?v=20260901135929';
+import { LEVEL_1 } from '../story/levels/level1.js?v=20260901135929';
+import { EXIT_CRITERIA, evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901135929';
 
 // Story mode. A beat/room state machine that walks through a level's beats:
 // load a beat's room (arena + capabilities + spawns + exit criteria), drive the
@@ -243,8 +243,10 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   spawnEnemy(spec) {
-    if (spec.type === 'chaser') return new Chaser(this, spec.x, spec.y);
-    // sheep / dog / other NPCs land in later steps.
+    if (spec.type === 'chaser') {
+      return new Chaser(this, spec.x, spec.y, { detection: spec.detection, patrol: spec.patrol });
+    }
+    // Other enemy types (shooter/cutter) arrive in a later level.
     console.warn(`StoryScene: enemy type '${spec.type}' not yet implemented`);
     return null;
   }

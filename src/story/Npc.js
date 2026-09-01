@@ -1,7 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901134553';
-import { dist } from '../utils/geometry.js?v=20260901134553';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901134553';
-import NpcReaction, { NPC_STATE } from '../systems/NpcReaction.js?v=20260901134553';
+import { CONFIG } from '../config.js?v=20260901135929';
+import { dist } from '../utils/geometry.js?v=20260901135929';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901135929';
+import NpcReaction, { NPC_STATE } from '../systems/NpcReaction.js?v=20260901135929';
+import { DETECT_STATE } from '../systems/DetectionStateMachine.js?v=20260901135929';
 
 // Escort/companion NPC (spec §2 beats 6-7). The same character is present in
 // beat 6 (first kill) and escorted in beat 7. It extends Chaser only to reuse
@@ -40,12 +41,18 @@ export default class Npc extends Chaser {
     // states in a later step).
     let nearest = null;
     let nearestDist = Infinity;
+    let engagedNear = false;
     for (const e of enemies) {
       if (e.dealsContactDamage === false) continue;
       const d = dist(e.x, e.y, this.x, this.y);
       if (d < nearestDist) { nearestDist = d; nearest = e; }
+      // A nearby enemy that has noticed anyone (Investigating/Engaged) is the
+      // spec's real Alert trigger (§1.5); plain distance is the fallback.
+      if (e.detection && e.detection.state !== DETECT_STATE.IDLE && d < N.ALERT_RADIUS) {
+        engagedNear = true;
+      }
     }
-    const state = this.reaction ? this.reaction.update({ nearestDist }) : NPC_STATE.IDLE;
+    const state = this.reaction ? this.reaction.update({ nearestDist, engagedNear }) : NPC_STATE.IDLE;
 
     let stepX = 0;
     let stepY = 0;

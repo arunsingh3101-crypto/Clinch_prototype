@@ -118,6 +118,21 @@ export const CONFIG = {
       NUDGE_COOLDOWN_MS: 500,
       STANDOFF: 60, // how far past the target sheep (away from the flock) the dog aims
     },
+    // Enemy detection state machine (§1.4). Per-type signal declarations drive
+    // the Idle→Investigating→Engaged transitions; radii are generous for the
+    // tutorial (beat 4 is the first vulnerable, no-combat moment). Only chasers
+    // use detection in Level 1; shooter/cutter configs are here for later levels.
+    DETECTION: {
+      DECAY: { investigateMs: 1800, engageGraceMs: 400 },
+      CHASER: { investigateOn: ['proximity'], engageOn: ['lineOfSight'], proximityRadius: 200, sightRadius: 150 },
+      SHOOTER: { investigateOn: ['alertPulse'], engageOn: ['playerInRange'], rangeRadius: 240 },
+      CUTTER: { investigateOn: ['trailPresent'], engageOn: ['trailLeadsToPlayer'] },
+      PATROL_SPEED_FACTOR: 0.5, // patrol pace, relative to chaser speed
+      INVESTIGATE_SPEED_FACTOR: 0.6, // cautious approach while investigating
+      IDLE_COLOR: 0x8e9aa3, // calm grey when unaware
+      INVESTIGATE_COLOR: 0xe59866, // amber
+      ENGAGED_COLOR: 0xe74c3c, // the normal chaser red
+    },
     // Escort/companion NPC (§2 beats 6-7) + its reaction machine (§1.5).
     NPC: {
       RADIUS: 11,

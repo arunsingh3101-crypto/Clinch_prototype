@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901134553';
+import { CONFIG } from '../config.js?v=20260901135929';
 
 // A residue left behind by the player 'cut' action (tutorial spec §1.3): the
 // abandoned trail path, frozen in place, persisting for a fixed duration then

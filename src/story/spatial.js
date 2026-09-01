@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901134553';
+import { CONFIG } from '../config.js?v=20260901135929';
 
 // The design's emergent unit: the max loop perimeter a player can draw is
 // roughly speed × trail lifetime (design-spec Part 3). The tutorial sizes its

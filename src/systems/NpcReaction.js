@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901134553';
+import { CONFIG } from '../config.js?v=20260901135929';
 
 // NPC reaction state machine (tutorial spec §1.5). Same three-state pattern as
 // the enemy detection machine, applied to NPCs as an OPTIONAL per-instance
@@ -26,12 +26,17 @@ export default class NpcReaction {
     this.state = NPC_STATE.IDLE;
   }
 
-  // threat: { nearestDist } — distance to the nearest threatening enemy.
+  // threat: { nearestDist, engagedNear }. nearestDist is the distance to the
+  // nearest threatening enemy; engagedNear is true when a nearby enemy has
+  // reached Investigating/Engaged on its detection machine (§1.4) — the spec's
+  // real Alert trigger, which supersedes the plain distance proxy once enemies
+  // carry detection.
   update(threat) {
     const d = (threat && threat.nearestDist != null) ? threat.nearestDist : Infinity;
+    const engagedNear = !!(threat && threat.engagedNear);
     if (this.enableDistress && d < this.distressRadius) {
       this.state = NPC_STATE.DISTRESSED;
-    } else if (this.enableAlert && d < this.alertRadius) {
+    } else if (this.enableAlert && (d < this.alertRadius || engagedNear)) {
       this.state = NPC_STATE.ALERT;
     } else {
       this.state = NPC_STATE.IDLE;

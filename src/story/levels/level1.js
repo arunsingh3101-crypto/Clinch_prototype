@@ -1,4 +1,4 @@
-import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901134553';
+import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901135929';
 
 // Level 1 — Tutorial (Village). Data-only description of the seven beats
 // (tutorial spec §2), consumed by StoryScene.
@@ -66,12 +66,12 @@ export const LEVEL_1 = {
       kind: 'traversal',
       trail: 'disabled', // no trail, no toggle, no draw (spec §2 beat 4)
       objective: 'Reach the docks — you have no trail here. Do not get caught.',
-      // Easy chasers; predictable patrol / generous detection lands with the
-      // detection state machine. Pure pursuit (slower than player) for now.
+      // Easy, fair guards: gated detection (§1.4) with generous radii — they
+      // patrol until they notice you, then investigate/pursue.
       enemies: [
-        { type: 'chaser', x: 380, y: 150 },
-        { type: 'chaser', x: 560, y: 400 },
-        { type: 'chaser', x: 720, y: 200 },
+        { type: 'chaser', x: 380, y: 150, detection: 'chaser', patrol: { axis: 'x', range: 70 } },
+        { type: 'chaser', x: 560, y: 400, detection: 'chaser', patrol: { axis: 'y', range: 60 } },
+        { type: 'chaser', x: 720, y: 200, detection: 'chaser', patrol: { axis: 'x', range: 80 } },
       ],
       spawn: { x: 60, y: 270 },
       exit: { type: EXIT_CRITERIA.REACH_POINT, zone: { x: 900, y: 270, radius: 40 } },
