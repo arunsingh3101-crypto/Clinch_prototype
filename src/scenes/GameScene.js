@@ -1,10 +1,11 @@
-import { CONFIG } from '../config.js?v=20260829114852';
-import { dist, pointInPolygon } from '../utils/geometry.js?v=20260829114852';
-import Player from '../entities/Player.js?v=20260829114852';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260829114852';
-import Spawner from '../systems/Spawner.js?v=20260829114852';
-import ScoreManager from '../systems/ScoreManager.js?v=20260829114852';
+import { CONFIG } from '../config.js?v=20260901104346';
+import ArenaSim from '../core/ArenaSim.js?v=20260901104346';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901104346';
+import Spawner from '../systems/Spawner.js?v=20260901104346';
+import ScoreManager from '../systems/ScoreManager.js?v=20260901104346';
 
+// Arcade mode. Owns the arcade-specific policy — pulsed wave spawner, scoring,
+// HUD/overlay, restart — and drives a shared ArenaSim for the verb itself.
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
@@ -23,12 +24,12 @@ export default class GameScene extends Phaser.Scene {
       CONFIG.ARENA.HEIGHT - CONFIG.ARENA.WALL_MARGIN * 2
     );
 
-    this.player = new Player(this, CONFIG.ARENA.WIDTH / 2, CONFIG.ARENA.HEIGHT / 2);
-    this.enemies = [];
-    this.projectiles = [];
+    this.scoreManager = new ScoreManager();
+    this.sim = new ArenaSim(this, {
+      onLoopResolved: (count, time) => this.scoreManager.registerLoop(count, time),
+    });
     this.joystick = new VirtualJoystick(this);
     this.spawner = new Spawner(this);
-    this.scoreManager = new ScoreManager();
     this.gameOver = false;
 
     this.hudText = this.add.text(12, 8, '', {
@@ -55,86 +56,22 @@ export default class GameScene extends Phaser.Scene {
     const deltaSeconds = delta / 1000;
     const vec = this.joystick.getVector(deltaSeconds);
 
-    this.player.move(vec.x, vec.y, deltaSeconds, time);
-    this.player.trail.update(time);
-    this.resolveLoop(time);
+    this.sim.step(vec, time, deltaSeconds);
 
-    this.updateEnemies(time, deltaSeconds);
-    this.updateProjectiles(time, deltaSeconds);
-
-    this.spawner.update(time, this.player, this.enemies);
+    this.spawner.update(time, this.sim.player, this.sim.enemies);
     this.scoreManager.update(time);
-
-    this.player.trail.draw(time);
-    this.player.syncSprite();
     this.updateHud();
 
-    if (this.player.health <= 0) {
+    if (this.sim.player.health <= 0) {
       this.triggerGameOver();
     }
   }
 
-  resolveLoop(time) {
-    const hit = this.player.trail.checkSelfIntersection(time);
-    if (!hit) return;
-
-    const area = this.player.trail.areaFrom(hit.index, hit.point);
-    if (area < CONFIG.TRAIL.MIN_LOOP_AREA) {
-      // Inert no-op (Part 4.2): below minimum area, nothing happens — the trail continues.
-      return;
-    }
-
-    const polygon = this.player.trail.polygonFrom(hit.index, hit.point);
-    const caught = this.enemies.filter((e) => e.alive && pointInPolygon(e.x, e.y, polygon));
-    for (const e of caught) {
-      e.alive = false;
-      e.destroy();
-    }
-    this.enemies = this.enemies.filter((e) => e.alive);
-
-    this.scoreManager.registerLoop(caught.length, time);
-    this.player.resetTrail(time);
-  }
-
-  updateEnemies(time, deltaSeconds) {
-    for (const enemy of this.enemies) {
-      if (enemy.constructor.type === 'shooter') {
-        enemy.update(this.player, this.player.trail, time, deltaSeconds, this.projectiles);
-      } else {
-        enemy.update(this.player, this.player.trail, deltaSeconds);
-      }
-
-      if (enemy.constructor.type !== 'cutter') {
-        const d = dist(enemy.x, enemy.y, this.player.x, this.player.y);
-        if (d < enemy.radius + CONFIG.PLAYER.RADIUS) {
-          this.player.takeDamage(1, time);
-        }
-      }
-    }
-  }
-
-  updateProjectiles(time, deltaSeconds) {
-    const survivors = [];
-    for (const p of this.projectiles) {
-      const stillAlive = p.update(this.player.trail, deltaSeconds);
-      if (!stillAlive) {
-        p.destroy();
-        continue;
-      }
-      if (dist(p.x, p.y, this.player.x, this.player.y) < p.radius + CONFIG.PLAYER.RADIUS) {
-        this.player.takeDamage(1, time);
-        p.destroy();
-        continue;
-      }
-      survivors.push(p);
-    }
-    this.projectiles = survivors;
-  }
-
   updateHud() {
     const sm = this.scoreManager;
+    const player = this.sim.player;
     this.hudText.setText(
-      `HP: ${'♥'.repeat(Math.max(0, this.player.health))}${'·'.repeat(Math.max(0, CONFIG.PLAYER.HEALTH - this.player.health))}\n` +
+      `HP: ${'♥'.repeat(Math.max(0, player.health))}${'·'.repeat(Math.max(0, CONFIG.PLAYER.HEALTH - player.health))}\n` +
       `Score: ${sm.score}   Kills: ${sm.kills}   Combo: x${sm.multiplier.toFixed(1)}`
     );
   }
