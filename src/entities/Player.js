@@ -1,6 +1,6 @@
-import { CONFIG } from '../config.js?v=20260901124225';
-import { clamp } from '../utils/geometry.js?v=20260901124225';
-import Trail from './Trail.js?v=20260901124225';
+import { CONFIG } from '../config.js?v=20260901134553';
+import { clamp } from '../utils/geometry.js?v=20260901134553';
+import Trail from './Trail.js?v=20260901134553';
 
 export default class Player {
   constructor(scene, x, y) {

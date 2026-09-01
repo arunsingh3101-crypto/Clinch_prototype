@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901124225';
+import { CONFIG } from '../config.js?v=20260901134553';
 
 // A minimal scripted dialogue/caption sequence for the tutorial's scripted-
 // trigger beats (spec §2 beats 3 & 5). It shows a bottom dialogue box and steps

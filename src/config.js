@@ -118,6 +118,19 @@ export const CONFIG = {
       NUDGE_COOLDOWN_MS: 500,
       STANDOFF: 60, // how far past the target sheep (away from the flock) the dog aims
     },
+    // Escort/companion NPC (§2 beats 6-7) + its reaction machine (§1.5).
+    NPC: {
+      RADIUS: 11,
+      COLOR: 0x5dade2, // calm blue (Idle)
+      ALERT_COLOR: 0xf4d03f,
+      DISTRESS_COLOR: 0xe74c3c,
+      SPEED: 200, // follow speed, <= player
+      FOLLOW_DISTANCE: 32, // trails this far behind the player (< exit-zone radius so it joins you there)
+      HEALTH: 3, // hits before the escort fails (survive-escort beats only)
+      INVULN_MS: 800,
+      ALERT_RADIUS: 140, // reaction: threat distance to enter Alert
+      DISTRESS_RADIUS: 70, // reaction: threat distance to enter Distressed
+    },
   },
 
   // Playtest-only overrides, set from the start screen (src/menu.js). Not part

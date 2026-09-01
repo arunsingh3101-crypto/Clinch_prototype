@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901124225';
-import ArenaSim from '../core/ArenaSim.js?v=20260901124225';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901124225';
-import Spawner from '../systems/Spawner.js?v=20260901124225';
-import ScoreManager from '../systems/ScoreManager.js?v=20260901124225';
+import { CONFIG } from '../config.js?v=20260901134553';
+import ArenaSim from '../core/ArenaSim.js?v=20260901134553';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901134553';
+import Spawner from '../systems/Spawner.js?v=20260901134553';
+import ScoreManager from '../systems/ScoreManager.js?v=20260901134553';
 
 // Arcade mode. Owns the arcade-specific policy — pulsed wave spawner, scoring,
 // HUD/overlay, restart — and drives a shared ArenaSim for the verb itself.

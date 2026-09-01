@@ -1,25 +1,20 @@
-import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901124225';
+import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901134553';
 
 // Level 1 — Tutorial (Village). Data-only description of the seven beats
-// (tutorial spec §2), consumed by StoryScene. Systems referenced here that are
-// not yet built (sheep, dog, dialogue, escort NPC) are described in data and
-// carried as `kind: 'placeholder'` / `'scripted'` beats until their step lands;
-// StoryScene walks through those with a visible placeholder so the whole level
-// is traversable now.
+// (tutorial spec §2), consumed by StoryScene.
 //
 // Beat `kind` drives how StoryScene runs it:
+//   herding     — sim, flock of penned-resolution sheep (+ optional dog)
 //   combat      — spawn enemies, real sim, room-clear / reach exit criteria
 //   traversal   — reach a point; trail may be disabled; may reset on being caught
-//   scripted    — cutscene/dialogue sequence (placeholder timed caption for now)
-//   placeholder — objective shown; auto-advances until its real system is built
+//   escort      — sim + companion NPC; survive-escort (both reach exit alive)
+//   scripted    — cutscene/dialogue sequence (ScriptSequence)
+//   placeholder — objective shown; auto-advances (generic fallback; unused now)
 //
 // `trail`: 'always-on' (arcade core, no toggle), 'disabled' (no trail at all),
 // or 'toggle' (compose TrailToggle/SneakMode/CutResidue — used in Level 2).
 //
 // Narrative text is placeholder (to be rewritten): see spec §2 beat table.
-
-// Placeholder dialogue/caption text — rewrite later.
-const PLACEHOLDER = '[placeholder — real content lands in a later step]';
 
 export const LEVEL_1 = {
   id: 'level-1',
@@ -120,17 +115,19 @@ export const LEVEL_1 = {
     {
       id: 'beat-7',
       name: 'Escort to Exit',
-      kind: 'placeholder',
+      kind: 'escort',
       trail: 'always-on',
-      objective: 'Escort the prisoner to the exit — keep them alive.',
-      // Real escort (NPC follow + survive-escort) lands with the escort step.
-      npc: { id: 'prisoner' },
+      objective: 'Get you both to the exit alive — loop the guards off the prisoner.',
+      // Same character as beat 6. Calm escort: Distressed/Fleeing disabled for
+      // this instance (spec §2 beat 7).
+      npc: { id: 'prisoner', reaction: { enableDistress: false } },
       enemies: [
         { type: 'chaser', x: 400, y: 150 },
         { type: 'chaser', x: 640, y: 380 },
       ],
-      exit: { type: EXIT_CRITERIA.SURVIVE_ESCORT },
-      placeholderNote: PLACEHOLDER,
+      spawn: { x: 90, y: 270 },
+      // survive-escort: both the player and the NPC must reach the exit alive.
+      exit: { type: EXIT_CRITERIA.SURVIVE_ESCORT, zone: { x: 895, y: 270, radius: 60 } },
     },
   ],
 };

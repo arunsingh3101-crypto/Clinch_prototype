@@ -1,4 +1,4 @@
-import { default as PlayerCapability } from './PlayerCapability.js?v=20260901124225';
+import { default as PlayerCapability } from './PlayerCapability.js?v=20260901134553';
 
 // Sneak Mode (tutorial spec §1.2). Story mode only.
 //

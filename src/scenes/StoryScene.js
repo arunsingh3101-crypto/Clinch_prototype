@@ -1,15 +1,17 @@
-import { CONFIG } from '../config.js?v=20260901124225';
-import ArenaSim from '../core/ArenaSim.js?v=20260901124225';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901124225';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901124225';
-import Sheep from '../entities/enemies/Sheep.js?v=20260901124225';
-import Dog from '../story/Dog.js?v=20260901124225';
-import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901124225';
-import SneakMode from '../player/capabilities/SneakMode.js?v=20260901124225';
-import CutResidue from '../player/capabilities/CutResidue.js?v=20260901124225';
-import ScriptSequence from '../story/ScriptSequence.js?v=20260901124225';
-import { LEVEL_1 } from '../story/levels/level1.js?v=20260901124225';
-import { evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901124225';
+import { CONFIG } from '../config.js?v=20260901134553';
+import ArenaSim from '../core/ArenaSim.js?v=20260901134553';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901134553';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901134553';
+import Sheep from '../entities/enemies/Sheep.js?v=20260901134553';
+import Dog from '../story/Dog.js?v=20260901134553';
+import Npc from '../story/Npc.js?v=20260901134553';
+import NpcReaction from '../systems/NpcReaction.js?v=20260901134553';
+import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901134553';
+import SneakMode from '../player/capabilities/SneakMode.js?v=20260901134553';
+import CutResidue from '../player/capabilities/CutResidue.js?v=20260901134553';
+import ScriptSequence from '../story/ScriptSequence.js?v=20260901134553';
+import { LEVEL_1 } from '../story/levels/level1.js?v=20260901134553';
+import { EXIT_CRITERIA, evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901134553';
 
 // Story mode. A beat/room state machine that walks through a level's beats:
 // load a beat's room (arena + capabilities + spawns + exit criteria), drive the
@@ -112,6 +114,21 @@ export default class StoryScene extends Phaser.Scene {
       this.dog = new Dog(this, s.x + 44, s.y);
     }
 
+    // Companion NPC (beats 6-7). Vulnerable + tracked only in survive-escort
+    // beats; a bystander otherwise (spec §2).
+    this.npc = null;
+    this.escort = null;
+    const exitList = Array.isArray(beat.exit) ? beat.exit : [beat.exit];
+    this.escortCriterion = exitList.find((c) => c && c.type === EXIT_CRITERIA.SURVIVE_ESCORT) || null;
+    if (beat.npc) {
+      const s = beat.spawn || { x: CONFIG.ARENA.WIDTH / 2, y: CONFIG.ARENA.HEIGHT / 2 };
+      const reaction = beat.npc.reaction ? new NpcReaction(beat.npc.reaction) : null;
+      this.npc = new Npc(this, s.x + 30, s.y + 30, {
+        reaction,
+        vulnerable: !!this.escortCriterion,
+      });
+    }
+
     // Draw exit-zone markers for reach-point / escort beats.
     this.drawExitZones(beat);
 
@@ -139,6 +156,7 @@ export default class StoryScene extends Phaser.Scene {
   teardownBeat() {
     if (this.script) { this.script.destroy(); this.script = null; }
     if (this.dog) { this.dog.destroy(); this.dog = null; }
+    if (this.npc) { this.npc.destroy(); this.npc = null; }
     if (this.sim) { this.sim.destroy(); this.sim = null; }
     for (const obj of this.beatObjects) obj.destroy();
     this.beatObjects = [];
@@ -279,6 +297,27 @@ export default class StoryScene extends Phaser.Scene {
       this.dog.update(this.sim.player, this.sim.player.trail, flock, dt, time);
     }
 
+    // Companion NPC: follow/react, take contact damage from enemies (only when
+    // vulnerable), and expose escort progress for the survive-escort criterion.
+    if (this.npc) {
+      const player = this.sim.player;
+      this.npc.update(player, player.trail, this.sim.enemies, dt, time);
+      for (const e of this.sim.enemies) {
+        if (e.dealsContactDamage === false) continue;
+        if (Phaser.Math.Distance.Between(e.x, e.y, this.npc.x, this.npc.y) < e.radius + this.npc.radius) {
+          this.npc.hurt(time);
+        }
+      }
+      if (this.escortCriterion) {
+        const zone = this.escortCriterion.zone;
+        this.escort = {
+          npcAlive: this.npc.alive,
+          npcReached: pointInZone(this.npc.x, this.npc.y, zone),
+          playerReached: pointInZone(player.x, player.y, zone),
+        };
+      }
+    }
+
     // Caught / dead → reset the beat (beat 4 semantics; also our failsafe).
     const caught = beat.onFail === 'reset-beat' && this.sim.player.health < this.beatStartHealth;
     if (caught || this.sim.player.health <= 0) {
@@ -328,6 +367,9 @@ export default class StoryScene extends Phaser.Scene {
     if (beat.kind === 'herding') {
       const left = this.sim.enemies.filter((e) => e.constructor.type === 'sheep').length;
       line3 = `Sheep to pen: ${left}`;
+    } else if (beat.kind === 'escort') {
+      const hp = this.npc && this.npc.alive ? this.npc.health : 0;
+      line3 = `Get to the marker together — prisoner HP: ${hp}   Enemies: ${this.sim.enemies.length}`;
     } else if (beat.kind === 'combat') {
       line3 = `Enemies left: ${this.sim.enemies.length}`;
     } else if (beat.kind === 'traversal') {
