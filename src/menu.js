@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=20260829114852';
+import { CONFIG } from './config.js?v=20260901141602';
 
 // Wires the start-screen overlay (plain HTML for touch-friendly native
 // sliders/checkboxes) to CONFIG before the Phaser game is created. Playtest
@@ -36,6 +36,28 @@ const pauseOverlay = document.getElementById('pause-overlay');
 const resumeBtn = document.getElementById('resume-btn');
 const quitToMenuBtn = document.getElementById('quit-to-menu-btn');
 
+// Story vs. arcade mode selector. Story hides the arcade-only controls (wave
+// spawning + per-type testing) since story mode drives its own spawns; the
+// shared tuning knobs (speed, trail, health, etc.) still apply to both.
+let selectedMode = 'arcade';
+const modeButtons = document.querySelectorAll('.mode-btn');
+const modeHint = document.getElementById('mode-hint');
+const arcadeOnlyEls = document.querySelectorAll('.arcade-only');
+
+function setMode(mode) {
+  selectedMode = mode;
+  modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+  modeHint.textContent = mode === 'story'
+    ? 'Level 1 — the village tutorial: herd the flock, escape, first kill, escort.'
+    : 'Endless escalating waves — the core verb under pressure.';
+  arcadeOnlyEls.forEach((el) => { el.style.display = mode === 'story' ? 'none' : ''; });
+}
+
+modeButtons.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+// The scene key the pause controls target, set when a run starts.
+let currentSceneKey = 'GameScene';
+
 // Tracks the live Phaser.Game instance so the pause controls (plain HTML,
 // same reasoning as the rest of this file) can reach into it. Reassigned
 // each time Start is pressed, since returning to the config screen destroys
@@ -44,15 +66,15 @@ let currentGame = null;
 
 pauseBtn.addEventListener('click', () => {
   if (!currentGame) return;
-  const scene = currentGame.scene.getScene('GameScene');
+  const scene = currentGame.scene.getScene(currentSceneKey);
   if (!scene || scene.gameOver) return;
-  currentGame.scene.pause('GameScene');
+  currentGame.scene.pause(currentSceneKey);
   pauseOverlay.style.display = 'flex';
 });
 
 resumeBtn.addEventListener('click', () => {
   if (!currentGame) return;
-  currentGame.scene.resume('GameScene');
+  currentGame.scene.resume(currentSceneKey);
   pauseOverlay.style.display = 'none';
 });
 
@@ -96,9 +118,10 @@ document.getElementById('start-btn').addEventListener('click', () => {
   // one full layout/paint has happened first.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      import('./main.js?v=20260829114852')
+      import('./main.js?v=20260901141602')
         .then(({ startGame }) => {
-          currentGame = startGame();
+          currentSceneKey = selectedMode === 'story' ? 'StoryScene' : 'GameScene';
+          currentGame = startGame(selectedMode);
           pauseBtn.style.display = 'flex';
         })
         .catch((err) => {

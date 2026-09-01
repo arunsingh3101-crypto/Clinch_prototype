@@ -80,6 +80,74 @@ export const CONFIG = {
     ESCALATION_RAMP_MS: 300000, // time after PHASE_ESCALATION_AT to reach max density
   },
 
+  // Story-mode systems (tutorial spec §1). Story mode only — arcade never
+  // reads these. All values here are best-guess defaults to refine via
+  // playtest, kept out of game logic per the config-not-prose convention.
+  STORY: {
+    // Toggling trail OFF→ON emits an alert pulse (§1.1). Radius is the reach of
+    // the signal; duration is how long the pulse lingers for enemies to notice.
+    ALERT_PULSE: {
+      START_RADIUS: 160, // px
+      DURATION_MS: 1500,
+    },
+    // The player 'cut' action (§1.3): abandons the current trail, leaving a
+    // residue that persists then expires; a short cooldown gates re-cutting.
+    CUT_RESIDUE: {
+      DURATION_MS: 4000, // how long an abandoned-trail residue lingers
+      COOLDOWN_MS: 300, // min gap between cuts (new trail may start immediately)
+    },
+    // Tutorial sheep (§1.6): zero-aggro chaser-variants that graze and scatter.
+    SHEEP: {
+      RADIUS: 10,
+      COLOR: 0xecf0f1, // off-white
+      PENNED_COLOR: 0xb0bec5, // greyed once penned
+      GRAZE_SPEED: 24, // slow idle wander
+      GRAZE_RETARGET_MS: 1800, // how often a grazing sheep picks a new drift point
+      SCATTER_RADIUS: 110, // player must be within this to possibly scare a sheep
+      SCATTER_CLOSING_SPEED: 120, // px/s of approach toward the sheep to trigger scatter
+      SCATTER_SPEED: 170, // flee-burst speed (stays below player speed)
+      SCATTER_DURATION_MS: 700,
+    },
+    // Tutorial shepherd dog (§2 beat 2): autonomous assist that drives the most
+    // isolated sheep back toward the flock. Speed cap stays <= player speed.
+    DOG: {
+      RADIUS: 9,
+      COLOR: 0x8d6e63, // brown
+      SPEED: 190,
+      NUDGE_RANGE: 46, // distance to a sheep at which the dog nudges it
+      NUDGE_COOLDOWN_MS: 500,
+      STANDOFF: 60, // how far past the target sheep (away from the flock) the dog aims
+    },
+    // Enemy detection state machine (§1.4). Per-type signal declarations drive
+    // the Idle→Investigating→Engaged transitions; radii are generous for the
+    // tutorial (beat 4 is the first vulnerable, no-combat moment). Only chasers
+    // use detection in Level 1; shooter/cutter configs are here for later levels.
+    DETECTION: {
+      DECAY: { investigateMs: 1800, engageGraceMs: 400 },
+      CHASER: { investigateOn: ['proximity'], engageOn: ['lineOfSight'], proximityRadius: 200, sightRadius: 150 },
+      SHOOTER: { investigateOn: ['alertPulse'], engageOn: ['playerInRange'], rangeRadius: 240 },
+      CUTTER: { investigateOn: ['trailPresent'], engageOn: ['trailLeadsToPlayer'] },
+      PATROL_SPEED_FACTOR: 0.5, // patrol pace, relative to chaser speed
+      INVESTIGATE_SPEED_FACTOR: 0.6, // cautious approach while investigating
+      IDLE_COLOR: 0x8e9aa3, // calm grey when unaware
+      INVESTIGATE_COLOR: 0xe59866, // amber
+      ENGAGED_COLOR: 0xe74c3c, // the normal chaser red
+    },
+    // Escort/companion NPC (§2 beats 6-7) + its reaction machine (§1.5).
+    NPC: {
+      RADIUS: 11,
+      COLOR: 0x5dade2, // calm blue (Idle)
+      ALERT_COLOR: 0xf4d03f,
+      DISTRESS_COLOR: 0xe74c3c,
+      SPEED: 200, // follow speed, <= player
+      FOLLOW_DISTANCE: 32, // trails this far behind the player (< exit-zone radius so it joins you there)
+      HEALTH: 3, // hits before the escort fails (survive-escort beats only)
+      INVULN_MS: 800,
+      ALERT_RADIUS: 140, // reaction: threat distance to enter Alert
+      DISTRESS_RADIUS: 70, // reaction: threat distance to enter Distressed
+    },
+  },
+
   // Playtest-only overrides, set from the start screen (src/menu.js). Not part
   // of the design spec — purely for fine-tuning/testing convenience.
   DEBUG: {
