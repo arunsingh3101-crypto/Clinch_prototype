@@ -1,4 +1,4 @@
-import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901123254';
+import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901124225';
 
 // Level 1 — Tutorial (Village). Data-only description of the seven beats
 // (tutorial spec §2), consumed by StoryScene. Systems referenced here that are
@@ -57,10 +57,11 @@ export const LEVEL_1 = {
       // Scripted sequence → ships appear on the horizon. Placeholder lines.
       script: {
         lines: [
+          'ELDER: You handle the flock well, child.',
           'ELDER: Strange sails on the water this morning.',
-          'ELDER: Nothing good ever comes from the sea.',
+          'ELDER: Nothing good has ever come from the sea.',
         ],
-        durationMs: 3500,
+        reveal: 'ships',
       },
       exit: { type: EXIT_CRITERIA.SCRIPTED_TRIGGER },
     },
@@ -89,10 +90,10 @@ export const LEVEL_1 = {
       objective: '',
       script: {
         lines: [
-          'You are taken. Iron doors. A cold room below the ship.',
-          '...',
+          'They came at dusk. There were too many.',
+          'Iron doors. A cold room in the belly of the ship.',
+          'When you wake, the village is a smudge on the horizon.',
         ],
-        durationMs: 3500,
       },
       exit: { type: EXIT_CRITERIA.SCRIPTED_TRIGGER },
     },

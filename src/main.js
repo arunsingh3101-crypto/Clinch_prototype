@@ -1,6 +1,6 @@
-import { CONFIG } from './config.js?v=20260901123254';
-import GameScene from './scenes/GameScene.js?v=20260901123254';
-import StoryScene from './scenes/StoryScene.js?v=20260901123254';
+import { CONFIG } from './config.js?v=20260901124225';
+import GameScene from './scenes/GameScene.js?v=20260901124225';
+import StoryScene from './scenes/StoryScene.js?v=20260901124225';
 
 // `mode` selects the starting scene: 'arcade' (default) or 'story'. The menu
 // will pass this once the Story/Arcade toggle lands; until then a '#story' URL

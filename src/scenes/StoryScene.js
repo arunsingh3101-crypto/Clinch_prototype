@@ -1,14 +1,15 @@
-import { CONFIG } from '../config.js?v=20260901123254';
-import ArenaSim from '../core/ArenaSim.js?v=20260901123254';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901123254';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901123254';
-import Sheep from '../entities/enemies/Sheep.js?v=20260901123254';
-import Dog from '../story/Dog.js?v=20260901123254';
-import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901123254';
-import SneakMode from '../player/capabilities/SneakMode.js?v=20260901123254';
-import CutResidue from '../player/capabilities/CutResidue.js?v=20260901123254';
-import { LEVEL_1 } from '../story/levels/level1.js?v=20260901123254';
-import { evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901123254';
+import { CONFIG } from '../config.js?v=20260901124225';
+import ArenaSim from '../core/ArenaSim.js?v=20260901124225';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901124225';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901124225';
+import Sheep from '../entities/enemies/Sheep.js?v=20260901124225';
+import Dog from '../story/Dog.js?v=20260901124225';
+import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901124225';
+import SneakMode from '../player/capabilities/SneakMode.js?v=20260901124225';
+import CutResidue from '../player/capabilities/CutResidue.js?v=20260901124225';
+import ScriptSequence from '../story/ScriptSequence.js?v=20260901124225';
+import { LEVEL_1 } from '../story/levels/level1.js?v=20260901124225';
+import { evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901124225';
 
 // Story mode. A beat/room state machine that walks through a level's beats:
 // load a beat's room (arena + capabilities + spawns + exit criteria), drive the
@@ -114,11 +115,18 @@ export default class StoryScene extends Phaser.Scene {
     // Draw exit-zone markers for reach-point / escort beats.
     this.drawExitZones(beat);
 
-    // Scripted / placeholder beats auto-advance on a timer (or SPACE).
+    // Scripted beats run a dialogue/caption sequence; placeholder beats just
+    // auto-advance on a timer (or SPACE) until their real system is built.
     this.scriptedDone = false;
     this.autoAdvanceAt = Infinity;
+    if (this.script) { this.script.destroy(); this.script = null; }
     if (beat.kind === 'scripted') {
-      this.autoAdvanceAt = now + (beat.script?.durationMs ?? 3000);
+      this.script = new ScriptSequence(this, {
+        lines: beat.script?.lines || [],
+        advanceKey: this.advanceKey,
+        onComplete: () => this.onScriptComplete(beat),
+      });
+      this.script.start(now);
     } else if (beat.kind === 'placeholder') {
       this.autoAdvanceAt = now + 3000;
     }
@@ -129,6 +137,7 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   teardownBeat() {
+    if (this.script) { this.script.destroy(); this.script = null; }
     if (this.dog) { this.dog.destroy(); this.dog = null; }
     if (this.sim) { this.sim.destroy(); this.sim = null; }
     for (const obj of this.beatObjects) obj.destroy();
@@ -177,6 +186,34 @@ export default class StoryScene extends Phaser.Scene {
     this.beatObjects.push(label);
   }
 
+  // Scripted-trigger completion. Beat 3 reveals ships on the horizon before the
+  // beat advances (spec §2 beat 3: dialogue complete → ships appear).
+  onScriptComplete(beat) {
+    if (this.script) { this.script.destroy(); this.script = null; }
+    if (beat.script && beat.script.reveal === 'ships') {
+      this.revealShips();
+      this.showCaption('Ships appear on the horizon.');
+      this.time.delayedCall(1500, () => { this.scriptedDone = true; });
+    } else {
+      this.scriptedDone = true;
+    }
+  }
+
+  // Placeholder-shape ships along the top edge (horizon).
+  revealShips() {
+    const g = this.add.graphics();
+    g.setDepth(200);
+    const y = CONFIG.ARENA.WALL_MARGIN + 26;
+    for (const x of [300, 470, 640]) {
+      g.fillStyle(0x2c3e50, 1);
+      g.fillRect(x - 26, y, 52, 14); // hull
+      g.fillStyle(0x95a5a6, 1);
+      g.fillRect(x - 2, y - 22, 4, 22); // mast
+      g.fillTriangle(x + 2, y - 20, x + 2, y - 2, x + 24, y - 2); // sail
+    }
+    this.beatObjects.push(g);
+  }
+
   // Compose capabilities per beat (spec §5): a 'toggle' beat gets the full
   // story kit; 'always-on' and 'disabled' beats attach none (arcade-identical
   // core), with 'disabled' just flipping trailActive off after construction.
@@ -215,7 +252,14 @@ export default class StoryScene extends Phaser.Scene {
     const beat = this.currentBeat();
     const dt = delta / 1000;
 
-    if (beat.kind === 'scripted' || beat.kind === 'placeholder') {
+    if (beat.kind === 'scripted') {
+      if (this.script) this.script.update(time);
+      if (this.scriptedDone) this.completeBeat(time);
+      this.updateHud(time);
+      return;
+    }
+
+    if (beat.kind === 'placeholder') {
       const skip = this.advanceKey && this.advanceKey.isDown;
       if (skip || time >= this.autoAdvanceAt) {
         this.scriptedDone = true;
@@ -289,7 +333,7 @@ export default class StoryScene extends Phaser.Scene {
     } else if (beat.kind === 'traversal') {
       line3 = 'Reach the marker.';
     } else if (beat.kind === 'scripted') {
-      line3 = beat.script?.lines?.[0] || '(scripted sequence)';
+      line3 = ''; // the dialogue box carries the text
     } else if (beat.kind === 'placeholder') {
       line3 = `${beat.placeholderNote || ''} (SPACE / auto-continue)`;
     }
