@@ -3,8 +3,9 @@
 A browser-based prototype of **Clinch**: you leave a solid, decaying trail as
 you move; closing that trail into a loop around enemies instantly kills
 everything inside it. No gun — the path *is* the weapon. Full design spec:
-[`docs/design-spec.md`](docs/design-spec.md). Art pipeline:
-[`docs/art-pipeline.md`](docs/art-pipeline.md).
+[`docs/design-spec.md`](docs/design-spec.md). Story-mode tutorial spec:
+[`docs/clinchstorymodetutorialspec.md`](docs/clinchstorymodetutorialspec.md).
+Art pipeline: [`docs/art-pipeline.md`](docs/art-pipeline.md).
 
 The current title screen still says "Cinch" — a leftover name, not a second title.
 
@@ -57,6 +58,11 @@ python3 -m http.server 8000
 Before the game boots you get an options screen (`src/menu.js`) to fine-tune
 a run without editing code:
 
+- **Mode — Arcade / Story.** Arcade is the endless escalating-wave prototype
+  described throughout this README. Story is the narrative tutorial layer (see
+  [Story mode](#story-mode) below). Selecting Story hides the arcade-only
+  controls (enemy spawning + per-type testing); the shared tuning knobs still
+  apply to both.
 - **God mode** — take no damage, for isolating movement/trail testing from combat.
 - **Enemy spawning** — turn off for an empty arena, just you and the trail.
 - Sliders for player speed, trail lifetime, minimum loop area, player
@@ -86,6 +92,44 @@ reload the page (settings aren't editable mid-run).
 - **Pause button** (gameplay screen) opens a Resume / Return to Configuration
   overlay — timers freeze while paused. Returning to configuration tears
   down the run so Start spins up a fresh one.
+- **Story mode only:** `T` toggles the trail on/off, `C` cuts the current
+  trail. On touch, the same actions appear as on-screen **TRAIL** / **CUT**
+  buttons, shown only on beats that grant those capabilities.
+
+## Story mode
+
+A narrative tutorial layer built on the same core verb (full spec:
+`docs/clinchstorymodetutorialspec.md`). Arcade is untouched — story is a
+separate scene (`src/scenes/StoryScene.js`) driving the shared simulation
+(`src/core/ArenaSim.js`), so both modes reuse one trail/loop/enemy core
+rather than duplicating it.
+
+**Level 1 — the village tutorial (7 beats):**
+
+1. **Sheep Pen** — herd a flock of zero-aggro sheep and close a loop to *pen*
+   them (loop-close resolves as pen, not kill). Sheep scatter from a fast,
+   direct approach — come at them gently.
+2. **Dog Assist** — an autonomous shepherd dog drives the strays back toward
+   the flock while you pen them.
+3. **Dialogue Bridge** — a scripted dialogue beat; ships appear on the horizon.
+4. **Escape the Village** — trail fully disabled; evade patrolling guards
+   (gated detection: they patrol until they notice you) and reach the docks.
+   Getting caught restarts the beat.
+5. **Captured** — a scripted containment cutscene.
+6. **Lab Escape — First Kill** — first real loop-kill: eliminate the guards
+   and reach the exit, with a companion present.
+7. **Escort to Exit** — get both you and the companion to the exit alive.
+
+New story systems live under `src/player/capabilities/` (trail toggle, sneak,
+cut-residue), `src/systems/` (detection + NPC reaction state machines), and
+`src/story/` (levels, scripted sequences, dog, NPC). All narrative text is
+placeholder, and actors are placeholder shapes. Story tuning constants sit in
+`CONFIG.STORY` in `src/config.js`.
+
+A second level's **opening toggle-teaching beat** is stubbed
+(`src/story/levels/level2.js`): a single guard that reacts to the trail-on
+alert pulse. It's reachable in development via the `#story&level=1` URL hash
+(dev-only; the menu starts Level 1).
 
 ## What's implemented (prototype scope — design doc Parts 1–10)
 
@@ -128,10 +172,15 @@ src/menu.js              wires the start screen to CONFIG, then boots the game
 src/main.js              exports startGame() — builds the Phaser.Game instance
 src/config.js            all tuning knobs (Part 11) + debug overrides (god mode, spawning)
 src/utils/geometry.js    segment intersection, polygon area, point-in-polygon
+src/core/ArenaSim.js     shared core simulation, driven by both mode scenes
 src/entities/            Player, Trail (the core verb), Projectile
-src/entities/enemies/    Chaser, Shooter, Cutter, Dormant, Fleer
-src/systems/             VirtualJoystick, Spawner (waves), ScoreManager
-src/scenes/GameScene.js  ties it all together — the main update loop
+src/entities/enemies/    Chaser, Shooter, Cutter, Dormant, Fleer, Sheep
+src/player/capabilities/ story capabilities: TrailToggle, SneakMode, CutResidue
+src/world/               story world objects: AlertPulse, Residue
+src/systems/             VirtualJoystick, Spawner, ScoreManager, Detection/NpcReaction SMs
+src/story/               story mode: ExitCriteria, ScriptSequence, Dog, Npc, levels/
+src/scenes/GameScene.js  arcade mode — waves + scoring over an ArenaSim
+src/scenes/StoryScene.js story mode — beat/room state machine over an ArenaSim
 ```
 
 ## Known simplifications (fine for a prototype, worth knowing about)
