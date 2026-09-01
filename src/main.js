@@ -1,6 +1,6 @@
-import { CONFIG } from './config.js?v=20260901114844';
-import GameScene from './scenes/GameScene.js?v=20260901114844';
-import StoryScene from './scenes/StoryScene.js?v=20260901114844';
+import { CONFIG } from './config.js?v=20260901123254';
+import GameScene from './scenes/GameScene.js?v=20260901123254';
+import StoryScene from './scenes/StoryScene.js?v=20260901123254';
 
 // `mode` selects the starting scene: 'arcade' (default) or 'story'. The menu
 // will pass this once the Story/Arcade toggle lands; until then a '#story' URL
@@ -8,7 +8,8 @@ import StoryScene from './scenes/StoryScene.js?v=20260901114844';
 // the other stays registered but inactive.
 export function startGame(mode = 'arcade') {
   const hash = (typeof location !== 'undefined' ? location.hash.replace('#', '') : '');
-  const useStory = mode === 'story' || hash === 'story';
+  // Dev entry: '#story' (optionally '#story&beat=N' to jump to a beat).
+  const useStory = mode === 'story' || hash.startsWith('story');
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,

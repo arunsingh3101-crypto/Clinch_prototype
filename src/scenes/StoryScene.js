@@ -1,12 +1,14 @@
-import { CONFIG } from '../config.js?v=20260901114844';
-import ArenaSim from '../core/ArenaSim.js?v=20260901114844';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901114844';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901114844';
-import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901114844';
-import SneakMode from '../player/capabilities/SneakMode.js?v=20260901114844';
-import CutResidue from '../player/capabilities/CutResidue.js?v=20260901114844';
-import { LEVEL_1 } from '../story/levels/level1.js?v=20260901114844';
-import { evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901114844';
+import { CONFIG } from '../config.js?v=20260901123254';
+import ArenaSim from '../core/ArenaSim.js?v=20260901123254';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901123254';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901123254';
+import Sheep from '../entities/enemies/Sheep.js?v=20260901123254';
+import Dog from '../story/Dog.js?v=20260901123254';
+import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901123254';
+import SneakMode from '../player/capabilities/SneakMode.js?v=20260901123254';
+import CutResidue from '../player/capabilities/CutResidue.js?v=20260901123254';
+import { LEVEL_1 } from '../story/levels/level1.js?v=20260901123254';
+import { evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901123254';
 
 // Story mode. A beat/room state machine that walks through a level's beats:
 // load a beat's room (arena + capabilities + spawns + exit criteria), drive the
@@ -23,7 +25,7 @@ export default class StoryScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor('#12160e'); // village-ish, distinct from arcade
     this.level = LEVEL_1;
-    this.beatIndex = 0;
+    this.beatIndex = this.devStartBeat();
 
     this.joystick = new VirtualJoystick(this);
     this.advanceKey = this.input.keyboard
@@ -44,11 +46,27 @@ export default class StoryScene extends Phaser.Scene {
       wordWrap: { width: CONFIG.ARENA.WIDTH - 120 },
     }).setOrigin(0.5).setDepth(2100).setVisible(false);
 
-    this.loadBeat(0);
+    // Dev-only handle for iterating/testing story beats from the console or a
+    // headless driver (only when launched via the story dev hash).
+    try {
+      if ((location.hash || '').includes('story')) window.__story = this;
+    } catch (e) { /* non-browser */ }
+
+    this.loadBeat(this.beatIndex);
   }
 
   currentBeat() {
     return this.level.beats[this.beatIndex];
+  }
+
+  // Dev-only: '#story&beat=N' jumps straight to a beat for iteration/testing.
+  // Ignored in the normal menu launch path.
+  devStartBeat() {
+    try {
+      const m = (location.hash || '').match(/beat=(\d+)/);
+      if (m) return Phaser.Math.Clamp(parseInt(m[1], 10), 0, this.level.beats.length - 1);
+    } catch (e) { /* no location (non-browser) */ }
+    return 0;
   }
 
   // ---- Beat lifecycle -------------------------------------------------------
@@ -76,14 +94,21 @@ export default class StoryScene extends Phaser.Scene {
     if (beat.trail === 'disabled') this.sim.player.trailActive = false;
     this.beatStartHealth = this.sim.player.health;
 
-    // Spawn any enemies the room can build (chaser only for now).
+    // Spawn actors this beat needs (enemies, sheep flock, shepherd dog).
     this.targetsSpawned = 0;
+    this.dog = null;
     for (const spec of beat.enemies || []) {
       const enemy = this.spawnEnemy(spec);
       if (enemy) {
         this.sim.enemies.push(enemy);
         this.targetsSpawned++;
       }
+    }
+    if (beat.pen) this.drawPen(beat.pen);
+    if (beat.sheep) this.spawnSheep(beat);
+    if (beat.dog) {
+      const s = beat.spawn || { x: CONFIG.ARENA.WIDTH / 2, y: CONFIG.ARENA.HEIGHT / 2 };
+      this.dog = new Dog(this, s.x + 44, s.y);
     }
 
     // Draw exit-zone markers for reach-point / escort beats.
@@ -104,9 +129,52 @@ export default class StoryScene extends Phaser.Scene {
   }
 
   teardownBeat() {
+    if (this.dog) { this.dog.destroy(); this.dog = null; }
     if (this.sim) { this.sim.destroy(); this.sim = null; }
     for (const obj of this.beatObjects) obj.destroy();
     this.beatObjects = [];
+  }
+
+  // Place the flock in a few loose clusters, away from the pen and the player's
+  // start. Each sheep is a penned-resolution chaser-variant (§1.6).
+  spawnSheep(beat) {
+    const { count, clusters } = beat.sheep;
+    const margin = CONFIG.ARENA.WALL_MARGIN + 40;
+    const avoid = [{ x: (beat.spawn || {}).x || 120, y: (beat.spawn || {}).y || 200, r: 120 }];
+    if (beat.pen) avoid.push({ x: beat.pen.x, y: beat.pen.y, r: Math.max(beat.pen.w, beat.pen.h) });
+
+    const centers = [];
+    for (let i = 0; i < clusters; i++) centers.push(this.randomPoint(margin, avoid));
+    for (let i = 0; i < count; i++) {
+      const c = centers[i % clusters];
+      const x = Phaser.Math.Clamp(c.x + Phaser.Math.Between(-40, 40), margin, CONFIG.ARENA.WIDTH - margin);
+      const y = Phaser.Math.Clamp(c.y + Phaser.Math.Between(-40, 40), margin, CONFIG.ARENA.HEIGHT - margin);
+      this.sim.enemies.push(new Sheep(this, x, y, { pen: beat.pen || null }));
+      this.targetsSpawned++;
+    }
+  }
+
+  randomPoint(margin, avoid) {
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const x = Phaser.Math.Between(margin, CONFIG.ARENA.WIDTH - margin);
+      const y = Phaser.Math.Between(margin, CONFIG.ARENA.HEIGHT - margin);
+      if (avoid.every((a) => Phaser.Math.Distance.Between(x, y, a.x, a.y) >= a.r)) return { x, y };
+    }
+    return { x: CONFIG.ARENA.WIDTH / 2, y: CONFIG.ARENA.HEIGHT / 2 };
+  }
+
+  drawPen(pen) {
+    const g = this.add.graphics();
+    g.fillStyle(0x3a2f1a, 0.35);
+    g.fillRect(pen.x - pen.w / 2, pen.y - pen.h / 2, pen.w, pen.h);
+    g.lineStyle(2, 0xcaa15a, 0.9);
+    g.strokeRect(pen.x - pen.w / 2, pen.y - pen.h / 2, pen.w, pen.h);
+    g.setDepth(250);
+    this.beatObjects.push(g);
+    const label = this.add.text(pen.x, pen.y - pen.h / 2 - 14, 'PEN', {
+      fontFamily: 'monospace', fontSize: '13px', color: '#caa15a',
+    }).setOrigin(0.5).setDepth(250);
+    this.beatObjects.push(label);
   }
 
   // Compose capabilities per beat (spec §5): a 'toggle' beat gets the full
@@ -157,9 +225,15 @@ export default class StoryScene extends Phaser.Scene {
       return;
     }
 
-    // combat / traversal: real sim.
+    // sim-driven beats (herding / combat / traversal): real sim.
     const vec = this.joystick.getVector(dt);
     this.sim.step(vec, time, dt);
+
+    // Autonomous dog assist, driven after the sim step with the live flock.
+    if (this.dog) {
+      const flock = this.sim.enemies.filter((e) => e.constructor.type === 'sheep');
+      this.dog.update(this.sim.player, this.sim.player.trail, flock, dt, time);
+    }
 
     // Caught / dead → reset the beat (beat 4 semantics; also our failsafe).
     const caught = beat.onFail === 'reset-beat' && this.sim.player.health < this.beatStartHealth;
@@ -207,7 +281,10 @@ export default class StoryScene extends Phaser.Scene {
   updateHud(time) {
     const beat = this.currentBeat();
     let line3 = '';
-    if (beat.kind === 'combat') {
+    if (beat.kind === 'herding') {
+      const left = this.sim.enemies.filter((e) => e.constructor.type === 'sheep').length;
+      line3 = `Sheep to pen: ${left}`;
+    } else if (beat.kind === 'combat') {
       line3 = `Enemies left: ${this.sim.enemies.length}`;
     } else if (beat.kind === 'traversal') {
       line3 = 'Reach the marker.';

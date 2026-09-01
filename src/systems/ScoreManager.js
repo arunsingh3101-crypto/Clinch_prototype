@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901114844';
+import { CONFIG } from '../config.js?v=20260901123254';
 
 // Reward scales superlinearly with enemies-per-loop, never with area (Part 6).
 // Combo multiplier rewards fast consecutive qualifying loops and decays on stall.

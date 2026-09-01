@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901114844';
-import { dist, pointInPolygon } from '../utils/geometry.js?v=20260901114844';
-import Player from '../entities/Player.js?v=20260901114844';
-import AlertPulse from '../world/AlertPulse.js?v=20260901114844';
-import Residue from '../world/Residue.js?v=20260901114844';
+import { CONFIG } from '../config.js?v=20260901123254';
+import { dist, pointInPolygon } from '../utils/geometry.js?v=20260901123254';
+import Player from '../entities/Player.js?v=20260901123254';
+import AlertPulse from '../world/AlertPulse.js?v=20260901123254';
+import Residue from '../world/Residue.js?v=20260901123254';
 
 // The shared core simulation: player + trail + enemies + projectiles, loop
 // resolution, contact damage, and projectile stepping — the verb itself, with
@@ -33,6 +33,7 @@ export default class ArenaSim {
     // per-frame update/draw over them costs nothing there.
     this.pulses = [];
     this.residues = [];
+    this.pennedTargets = []; // resolved-as-penned targets, kept drawn until teardown
 
     // Compose player capabilities the mode asked for (spec §5). Arcade passes
     // none; story passes TrailToggle / SneakMode / CutResidue instances.
@@ -83,8 +84,12 @@ export default class ArenaSim {
       e.alive = false;
       if (e.resolution === 'pen') {
         pennedCount++;
-        if (typeof e.onPenned === 'function') e.onPenned(this, time);
-        else e.destroy();
+        if (typeof e.onPenned === 'function') {
+          e.onPenned(this, time);
+          this.pennedTargets.push(e); // stays drawn; torn down with the beat
+        } else {
+          e.destroy();
+        }
       } else {
         killedCount++;
         e.destroy();
@@ -104,7 +109,9 @@ export default class ArenaSim {
         enemy.update(this.player, this.player.trail, deltaSeconds);
       }
 
-      if (enemy.constructor.type !== 'cutter') {
+      // Cutters never contact-damage (by type); harmless actors (e.g. sheep)
+      // opt out with dealsContactDamage:false. Arcade enemies leave it unset.
+      if (enemy.constructor.type !== 'cutter' && enemy.dealsContactDamage !== false) {
         const d = dist(enemy.x, enemy.y, this.player.x, this.player.y);
         if (d < enemy.radius + CONFIG.PLAYER.RADIUS) {
           this.player.takeDamage(1, time);
@@ -168,10 +175,12 @@ export default class ArenaSim {
   destroy() {
     this.player.destroy();
     for (const e of this.enemies) e.destroy();
+    for (const e of this.pennedTargets) e.destroy();
     for (const p of this.projectiles) p.destroy();
     for (const p of this.pulses) p.destroy();
     for (const r of this.residues) r.destroy();
     this.enemies = [];
+    this.pennedTargets = [];
     this.projectiles = [];
     this.pulses = [];
     this.residues = [];

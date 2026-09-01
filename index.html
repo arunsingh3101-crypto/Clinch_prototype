@@ -23,7 +23,7 @@
     // version doesn't match what's embedded below, reloads via a
     // never-before-seen URL (a fresh ?v= query param), which the browser
     // cache cannot have an entry for. No hard-refresh gesture required.
-    window.APP_VERSION = '20260901114844';
+    window.APP_VERSION = '20260901123254';
     (function () {
       var ATTEMPTS_KEY = 'cinch_version_redirect_attempts';
       fetch('./version.json?_=' + Date.now(), { cache: 'no-store' })
@@ -116,7 +116,7 @@
       touch-action: pan-y;
       padding: 24px 16px;
       box-sizing: border-box;
-      background: #10141a url('./assets/menu-background.jpg?v=20260901114844') center / cover no-repeat;
+      background: #10141a url('./assets/menu-background.jpg?v=20260901123254') center / cover no-repeat;
     }
     #menu-panel {
       width: 100%;
@@ -413,7 +413,7 @@
     </div>
   </div>
 
-  <script src="./vendor/phaser.min.js?v=20260901114844"></script>
-  <script type="module" src="./src/menu.js?v=20260901114844"></script>
+  <script src="./vendor/phaser.min.js?v=20260901123254"></script>
+  <script type="module" src="./src/menu.js?v=20260901123254"></script>
 </body>
 </html>

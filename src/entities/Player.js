@@ -1,6 +1,6 @@
-import { CONFIG } from '../config.js?v=20260901114844';
-import { clamp } from '../utils/geometry.js?v=20260901114844';
-import Trail from './Trail.js?v=20260901114844';
+import { CONFIG } from '../config.js?v=20260901123254';
+import { clamp } from '../utils/geometry.js?v=20260901123254';
+import Trail from './Trail.js?v=20260901123254';
 
 export default class Player {
   constructor(scene, x, y) {
@@ -17,6 +17,11 @@ export default class Player {
     this.trailActive = true; // false while the trail is toggled OFF (§1.1)
     this.sneaking = false; // derived by SneakMode from trailActive (§1.2)
 
+    // Current velocity (px/s), refreshed each move. Zero while standing still.
+    // Read by sheep to tell a fast/direct approach from a careful one (§1.6).
+    this.vx = 0;
+    this.vy = 0;
+
     this.sprite = scene.add.rectangle(x, y, CONFIG.PLAYER.RADIUS * 2, CONFIG.PLAYER.RADIUS * 2, 0x2ecc71);
     this.sprite.setStrokeStyle(2, 0xffffff);
   }
@@ -26,11 +31,17 @@ export default class Player {
   }
 
   move(dx, dy, deltaSeconds, now) {
-    if (dx === 0 && dy === 0) return;
+    if (dx === 0 && dy === 0) {
+      this.vx = 0;
+      this.vy = 0;
+      return;
+    }
     const len = Math.hypot(dx, dy) || 1;
     const nx = dx / len;
     const ny = dy / len;
     const speed = CONFIG.PLAYER.SPEED;
+    this.vx = nx * speed;
+    this.vy = ny * speed;
 
     const margin = CONFIG.ARENA.WALL_MARGIN + CONFIG.PLAYER.RADIUS;
     this.x = clamp(this.x + nx * speed * deltaSeconds, margin, CONFIG.ARENA.WIDTH - margin);

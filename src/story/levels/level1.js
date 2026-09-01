@@ -1,4 +1,4 @@
-import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901114844';
+import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901123254';
 
 // Level 1 — Tutorial (Village). Data-only description of the seven beats
 // (tutorial spec §2), consumed by StoryScene. Systems referenced here that are
@@ -28,24 +28,25 @@ export const LEVEL_1 = {
     {
       id: 'beat-1',
       name: 'Sheep Pen',
-      kind: 'placeholder',
+      kind: 'herding', // sim-driven; sheep as penned chaser-variants (§1.6)
       trail: 'always-on',
-      objective: 'Herd the flock and close a loop to pen them.',
-      // Real system (sheep as penned chaser-variants) lands with the sheep step.
+      objective: 'Approach gently, then loop the flock to pen them.',
       sheep: { count: 7, clusters: 3 },
+      pen: { x: 820, y: 430, w: 200, h: 150 },
+      spawn: { x: 120, y: 200 },
       exit: { type: EXIT_CRITERIA.ROOM_CLEAR },
-      placeholderNote: PLACEHOLDER,
     },
     {
       id: 'beat-2',
       name: 'Dog Assist',
-      kind: 'placeholder',
+      kind: 'herding',
       trail: 'always-on',
-      objective: 'Your dog helps drive the flock — pen them all.',
+      objective: 'Your dog drives the strays in — loop the flock to pen them.',
       sheep: { count: 7, clusters: 3 },
       dog: true,
+      pen: { x: 820, y: 430, w: 200, h: 150 },
+      spawn: { x: 120, y: 200 },
       exit: { type: EXIT_CRITERIA.ROOM_CLEAR },
-      placeholderNote: PLACEHOLDER,
     },
     {
       id: 'beat-3',

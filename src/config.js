@@ -96,6 +96,28 @@ export const CONFIG = {
       DURATION_MS: 4000, // how long an abandoned-trail residue lingers
       COOLDOWN_MS: 300, // min gap between cuts (new trail may start immediately)
     },
+    // Tutorial sheep (§1.6): zero-aggro chaser-variants that graze and scatter.
+    SHEEP: {
+      RADIUS: 10,
+      COLOR: 0xecf0f1, // off-white
+      PENNED_COLOR: 0xb0bec5, // greyed once penned
+      GRAZE_SPEED: 24, // slow idle wander
+      GRAZE_RETARGET_MS: 1800, // how often a grazing sheep picks a new drift point
+      SCATTER_RADIUS: 110, // player must be within this to possibly scare a sheep
+      SCATTER_CLOSING_SPEED: 120, // px/s of approach toward the sheep to trigger scatter
+      SCATTER_SPEED: 170, // flee-burst speed (stays below player speed)
+      SCATTER_DURATION_MS: 700,
+    },
+    // Tutorial shepherd dog (§2 beat 2): autonomous assist that drives the most
+    // isolated sheep back toward the flock. Speed cap stays <= player speed.
+    DOG: {
+      RADIUS: 9,
+      COLOR: 0x8d6e63, // brown
+      SPEED: 190,
+      NUDGE_RANGE: 46, // distance to a sheep at which the dog nudges it
+      NUDGE_COOLDOWN_MS: 500,
+      STANDOFF: 60, // how far past the target sheep (away from the flock) the dog aims
+    },
   },
 
   // Playtest-only overrides, set from the start screen (src/menu.js). Not part
