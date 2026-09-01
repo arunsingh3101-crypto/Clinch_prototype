@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=20260901104346';
+import { CONFIG } from './config.js?v=20260901110438';
 
 // Wires the start-screen overlay (plain HTML for touch-friendly native
 // sliders/checkboxes) to CONFIG before the Phaser game is created. Playtest
@@ -96,7 +96,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
   // one full layout/paint has happened first.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      import('./main.js?v=20260901104346')
+      import('./main.js?v=20260901110438')
         .then(({ startGame }) => {
           currentGame = startGame();
           pauseBtn.style.display = 'flex';

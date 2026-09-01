@@ -80,6 +80,24 @@ export const CONFIG = {
     ESCALATION_RAMP_MS: 300000, // time after PHASE_ESCALATION_AT to reach max density
   },
 
+  // Story-mode systems (tutorial spec §1). Story mode only — arcade never
+  // reads these. All values here are best-guess defaults to refine via
+  // playtest, kept out of game logic per the config-not-prose convention.
+  STORY: {
+    // Toggling trail OFF→ON emits an alert pulse (§1.1). Radius is the reach of
+    // the signal; duration is how long the pulse lingers for enemies to notice.
+    ALERT_PULSE: {
+      START_RADIUS: 160, // px
+      DURATION_MS: 1500,
+    },
+    // The player 'cut' action (§1.3): abandons the current trail, leaving a
+    // residue that persists then expires; a short cooldown gates re-cutting.
+    CUT_RESIDUE: {
+      DURATION_MS: 4000, // how long an abandoned-trail residue lingers
+      COOLDOWN_MS: 300, // min gap between cuts (new trail may start immediately)
+    },
+  },
+
   // Playtest-only overrides, set from the start screen (src/menu.js). Not part
   // of the design spec — purely for fine-tuning/testing convenience.
   DEBUG: {

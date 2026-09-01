@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901104346';
-import ArenaSim from '../core/ArenaSim.js?v=20260901104346';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901104346';
-import Spawner from '../systems/Spawner.js?v=20260901104346';
-import ScoreManager from '../systems/ScoreManager.js?v=20260901104346';
+import { CONFIG } from '../config.js?v=20260901110438';
+import ArenaSim from '../core/ArenaSim.js?v=20260901110438';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901110438';
+import Spawner from '../systems/Spawner.js?v=20260901110438';
+import ScoreManager from '../systems/ScoreManager.js?v=20260901110438';
 
 // Arcade mode. Owns the arcade-specific policy — pulsed wave spawner, scoring,
 // HUD/overlay, restart — and drives a shared ArenaSim for the verb itself.
@@ -26,7 +26,8 @@ export default class GameScene extends Phaser.Scene {
 
     this.scoreManager = new ScoreManager();
     this.sim = new ArenaSim(this, {
-      onLoopResolved: (count, time) => this.scoreManager.registerLoop(count, time),
+      // Arcade only kills, so killedCount === caughtCount here — same as before.
+      onLoopResolved: (result, time) => this.scoreManager.registerLoop(result.killedCount, time),
     });
     this.joystick = new VirtualJoystick(this);
     this.spawner = new Spawner(this);

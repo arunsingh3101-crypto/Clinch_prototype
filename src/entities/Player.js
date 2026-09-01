@@ -1,6 +1,6 @@
-import { CONFIG } from '../config.js?v=20260901104346';
-import { clamp } from '../utils/geometry.js?v=20260901104346';
-import Trail from './Trail.js?v=20260901104346';
+import { CONFIG } from '../config.js?v=20260901110438';
+import { clamp } from '../utils/geometry.js?v=20260901110438';
+import Trail from './Trail.js?v=20260901110438';
 
 export default class Player {
   constructor(scene, x, y) {
@@ -10,6 +10,12 @@ export default class Player {
     this.health = CONFIG.PLAYER.HEALTH;
     this.invulnUntil = 0;
     this.trail = new Trail(scene);
+
+    // Composable story-mode capabilities (spec §5), keyed by capability.key.
+    // Arcade attaches none: trailActive stays true forever, sneaking false.
+    this.capabilities = new Map();
+    this.trailActive = true; // false while the trail is toggled OFF (§1.1)
+    this.sneaking = false; // derived by SneakMode from trailActive (§1.2)
 
     this.sprite = scene.add.rectangle(x, y, CONFIG.PLAYER.RADIUS * 2, CONFIG.PLAYER.RADIUS * 2, 0x2ecc71);
     this.sprite.setStrokeStyle(2, 0xffffff);
@@ -30,7 +36,26 @@ export default class Player {
     this.x = clamp(this.x + nx * speed * deltaSeconds, margin, CONFIG.ARENA.WIDTH - margin);
     this.y = clamp(this.y + ny * speed * deltaSeconds, margin, CONFIG.ARENA.HEIGHT - margin);
 
-    this.trail.addPoint(this.x, this.y, now);
+    // No trail is laid while it's toggled OFF (§1.1) — Sneak Mode.
+    if (this.trailActive) this.trail.addPoint(this.x, this.y, now);
+  }
+
+  // --- Capability wiring (spec §5) -------------------------------------------
+  addCapability(cap, sim) {
+    cap.attach({ player: this, sim });
+    cap.enable();
+    this.capabilities.set(cap.constructor.key, cap);
+    return cap;
+  }
+
+  getCapability(key) {
+    return this.capabilities.get(key) || null;
+  }
+
+  updateCapabilities(now, deltaSeconds) {
+    for (const cap of this.capabilities.values()) {
+      if (cap.enabled) cap.update(now, deltaSeconds);
+    }
   }
 
   takeDamage(amount, now) {
