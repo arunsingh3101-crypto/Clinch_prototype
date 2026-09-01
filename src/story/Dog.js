@@ -1,6 +1,6 @@
-import { CONFIG } from '../config.js?v=20260901140734';
-import { dist } from '../utils/geometry.js?v=20260901140734';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901140734';
+import { CONFIG } from '../config.js?v=20260901141602';
+import { dist } from '../utils/geometry.js?v=20260901141602';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901141602';
 
 // Shepherd dog (spec §2 beat 2). An autonomous assist — no new player input.
 // It extends Chaser purely to reuse the trail-aware movement (tryMove/slide/

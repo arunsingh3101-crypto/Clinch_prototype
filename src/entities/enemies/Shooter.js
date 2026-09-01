@@ -1,5 +1,5 @@
-import { CONFIG } from '../../config.js?v=20260901140734';
-import Projectile from '../Projectile.js?v=20260901140734';
+import { CONFIG } from '../../config.js?v=20260901141602';
+import Projectile from '../Projectile.js?v=20260901141602';
 
 // Stationary-ish; fires aimed shots on a cadence. Its job is to punish camping —
 // the trail blocks its shots, so the player can shield behind their own line.

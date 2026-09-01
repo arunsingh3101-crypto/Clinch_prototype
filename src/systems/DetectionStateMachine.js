@@ -1,5 +1,5 @@
-import { CONFIG } from '../config.js?v=20260901140734';
-import { dist } from '../utils/geometry.js?v=20260901140734';
+import { CONFIG } from '../config.js?v=20260901141602';
+import { dist } from '../utils/geometry.js?v=20260901141602';
 
 // Enemy detection state machine (tutorial spec §1.4). A single reusable
 // component — Idle → Investigating → Engaged, decaying back down — configured

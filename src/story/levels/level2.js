@@ -1,4 +1,4 @@
-import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901140734';
+import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901141602';
 
 // Level 2 — Opening beat (toggle teaching), spec §3. Deliberately held back from
 // the tutorial so the trail on/off toggle gets its own low-stakes teaching

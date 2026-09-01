@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901140734';
-import { dist } from '../utils/geometry.js?v=20260901140734';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901140734';
-import NpcReaction, { NPC_STATE } from '../systems/NpcReaction.js?v=20260901140734';
-import { DETECT_STATE } from '../systems/DetectionStateMachine.js?v=20260901140734';
+import { CONFIG } from '../config.js?v=20260901141602';
+import { dist } from '../utils/geometry.js?v=20260901141602';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901141602';
+import NpcReaction, { NPC_STATE } from '../systems/NpcReaction.js?v=20260901141602';
+import { DETECT_STATE } from '../systems/DetectionStateMachine.js?v=20260901141602';
 
 // Escort/companion NPC (spec §2 beats 6-7). The same character is present in
 // beat 6 (first kill) and escorted in beat 7. It extends Chaser only to reuse

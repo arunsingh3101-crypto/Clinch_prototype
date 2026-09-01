@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901140734';
+import { CONFIG } from '../config.js?v=20260901141602';
 
 // A transient alert signal emitted when the player toggles the trail OFF→ON
 // (tutorial spec §1.1). It occupies a fixed radius for a fixed duration; any

@@ -1,4 +1,4 @@
-import { CONFIG } from '../../config.js?v=20260901140734';
+import { CONFIG } from '../../config.js?v=20260901141602';
 
 // The anti-verb: ignores the trail as a wall, passes through it, and severs it
 // from the crossing point back to the tail. Beelines for a point on the

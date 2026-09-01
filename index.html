@@ -23,7 +23,7 @@
     // version doesn't match what's embedded below, reloads via a
     // never-before-seen URL (a fresh ?v= query param), which the browser
     // cache cannot have an entry for. No hard-refresh gesture required.
-    window.APP_VERSION = '20260901140734';
+    window.APP_VERSION = '20260901141602';
     (function () {
       var ATTEMPTS_KEY = 'cinch_version_redirect_attempts';
       fetch('./version.json?_=' + Date.now(), { cache: 'no-store' })
@@ -116,7 +116,7 @@
       touch-action: pan-y;
       padding: 24px 16px;
       box-sizing: border-box;
-      background: #10141a url('./assets/menu-background.jpg?v=20260901140734') center / cover no-repeat;
+      background: #10141a url('./assets/menu-background.jpg?v=20260901141602') center / cover no-repeat;
     }
     #menu-panel {
       width: 100%;
@@ -250,6 +250,28 @@
       border-radius: 8px;
     }
 
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      background: #1a2029;
+      color: #e8eef2;
+      border: 1px solid #2a323d;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      background: #2ecc71;
+      color: #0b1410;
+      border-color: #2ecc71;
+    }
+
     #pause-btn {
       display: none;
       position: fixed;
@@ -327,7 +349,15 @@
   <div id="menu-overlay">
     <div id="menu-panel">
       <h1>Cinch — Prototype</h1>
-      <p class="subtitle">Loop the trail around enemies to kill them. Tune knobs below, then start.</p>
+      <p class="subtitle">Loop the trail around enemies to kill them. Pick a mode, tune knobs, then start.</p>
+
+      <div class="mode-toggle" id="mode-toggle">
+        <button type="button" class="mode-btn active" data-mode="arcade">Arcade</button>
+        <button type="button" class="mode-btn" data-mode="story">Story</button>
+      </div>
+      <p class="hint" id="mode-hint">Endless escalating waves — the core verb under pressure.</p>
+
+      <hr />
 
       <div class="checkbox-row">
         <div class="label-block">
@@ -337,7 +367,7 @@
         <input type="checkbox" id="god-mode" />
       </div>
 
-      <div class="checkbox-row">
+      <div class="checkbox-row arcade-only">
         <div class="label-block">
           <span class="title">Enemy spawning</span>
           <span class="desc">Turn off for an empty arena, just you and the trail</span>
@@ -374,6 +404,7 @@
         <p class="hint">Applies to Chaser, Dormant (while active), and Fleer — compare against player speed above to fine-tune the chase.</p>
       </div>
 
+      <div class="arcade-only">
       <hr />
       <p class="section-label">Enemy testing</p>
 
@@ -397,6 +428,7 @@
           <option value="nearest_to_cutter">Nearest to cutter (spec default — chases the tail)</option>
         </select>
       </div>
+      </div><!-- /.arcade-only -->
 
       <button id="start-btn">Start</button>
     </div>
@@ -413,7 +445,7 @@
     </div>
   </div>
 
-  <script src="./vendor/phaser.min.js?v=20260901140734"></script>
-  <script type="module" src="./src/menu.js?v=20260901140734"></script>
+  <script src="./vendor/phaser.min.js?v=20260901141602"></script>
+  <script type="module" src="./src/menu.js?v=20260901141602"></script>
 </body>
 </html>
