@@ -1,6 +1,6 @@
-import { CONFIG } from '../../config.js?v=20260901135929';
-import { clamp } from '../../utils/geometry.js?v=20260901135929';
-import DetectionStateMachine, { DETECT_STATE, senseDetection } from '../../systems/DetectionStateMachine.js?v=20260901135929';
+import { CONFIG } from '../../config.js?v=20260901140734';
+import { clamp } from '../../utils/geometry.js?v=20260901140734';
+import DetectionStateMachine, { DETECT_STATE, senseDetection } from '../../systems/DetectionStateMachine.js?v=20260901140734';
 
 // Pure pursuit, slower than the player, blocked by the trail like a wall
 // (basic wall-slide steering — enough for "paths around it" at prototype fidelity).
@@ -20,13 +20,16 @@ export default class Chaser {
     this.alive = true;
     this.sprite = scene.add.rectangle(x, y, this.radius * 2, this.radius * 2, CONFIG.ENEMIES.CHASER.COLOR);
 
-    // Optional gated detection (story mode).
+    // Optional gated detection (story mode). options.detection is either a type
+    // key ('chaser') resolved against config, or an inline config object (used
+    // by the Level 2 toggle-teaching chaser, which investigates on alert pulse).
     this.detection = options.detection
       ? new DetectionStateMachine(CONFIG.STORY.DETECTION.DECAY)
       : null;
-    this.detectionConfig = options.detection
-      ? CONFIG.STORY.DETECTION[String(options.detection).toUpperCase()]
-      : null;
+    this.detectionConfig = typeof options.detection === 'string'
+      ? CONFIG.STORY.DETECTION[options.detection.toUpperCase()]
+      : (options.detection || null);
+    this.world = options.world || null; // sim ref, for pulse/residue signals
     this.patrol = options.patrol || null; // { axis: 'x'|'y', range: px }
     this.spawnX = x;
     this.spawnY = y;
@@ -45,7 +48,9 @@ export default class Chaser {
   updateWithDetection(player, trail, deltaSeconds) {
     const now = this.scene.time.now;
     const { detect, engage } = senseDetection(this, this.detectionConfig, {
-      player, trail, now, pulses: [], residues: [],
+      player, trail, now,
+      pulses: this.world ? this.world.pulses : [],
+      residues: this.world ? this.world.residues : [],
     });
     const state = this.detection.update(now, { detect, engage });
     const D = CONFIG.STORY.DETECTION;

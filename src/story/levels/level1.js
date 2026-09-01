@@ -1,4 +1,4 @@
-import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901135929';
+import { EXIT_CRITERIA } from '../ExitCriteria.js?v=20260901140734';
 
 // Level 1 — Tutorial (Village). Data-only description of the seven beats
 // (tutorial spec §2), consumed by StoryScene.

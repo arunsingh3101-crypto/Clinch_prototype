@@ -1,17 +1,20 @@
-import { CONFIG } from '../config.js?v=20260901135929';
-import ArenaSim from '../core/ArenaSim.js?v=20260901135929';
-import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901135929';
-import Chaser from '../entities/enemies/Chaser.js?v=20260901135929';
-import Sheep from '../entities/enemies/Sheep.js?v=20260901135929';
-import Dog from '../story/Dog.js?v=20260901135929';
-import Npc from '../story/Npc.js?v=20260901135929';
-import NpcReaction from '../systems/NpcReaction.js?v=20260901135929';
-import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901135929';
-import SneakMode from '../player/capabilities/SneakMode.js?v=20260901135929';
-import CutResidue from '../player/capabilities/CutResidue.js?v=20260901135929';
-import ScriptSequence from '../story/ScriptSequence.js?v=20260901135929';
-import { LEVEL_1 } from '../story/levels/level1.js?v=20260901135929';
-import { EXIT_CRITERIA, evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901135929';
+import { CONFIG } from '../config.js?v=20260901140734';
+import ArenaSim from '../core/ArenaSim.js?v=20260901140734';
+import VirtualJoystick from '../systems/VirtualJoystick.js?v=20260901140734';
+import Chaser from '../entities/enemies/Chaser.js?v=20260901140734';
+import Sheep from '../entities/enemies/Sheep.js?v=20260901140734';
+import Dog from '../story/Dog.js?v=20260901140734';
+import Npc from '../story/Npc.js?v=20260901140734';
+import NpcReaction from '../systems/NpcReaction.js?v=20260901140734';
+import TrailToggle from '../player/capabilities/TrailToggle.js?v=20260901140734';
+import SneakMode from '../player/capabilities/SneakMode.js?v=20260901140734';
+import CutResidue from '../player/capabilities/CutResidue.js?v=20260901140734';
+import ScriptSequence from '../story/ScriptSequence.js?v=20260901140734';
+import { LEVEL_1 } from '../story/levels/level1.js?v=20260901140734';
+import { LEVEL_2 } from '../story/levels/level2.js?v=20260901140734';
+import { EXIT_CRITERIA, evaluateExit, pointInZone } from '../story/ExitCriteria.js?v=20260901140734';
+
+const LEVELS = [LEVEL_1, LEVEL_2];
 
 // Story mode. A beat/room state machine that walks through a level's beats:
 // load a beat's room (arena + capabilities + spawns + exit criteria), drive the
@@ -27,13 +30,16 @@ export default class StoryScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor('#12160e'); // village-ish, distinct from arcade
-    this.level = LEVEL_1;
+    this.level = LEVELS[this.devStartLevel()];
     this.beatIndex = this.devStartBeat();
 
     this.joystick = new VirtualJoystick(this);
-    this.advanceKey = this.input.keyboard
-      ? this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-      : null;
+    const kb = this.input.keyboard;
+    this.advanceKey = kb ? kb.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE) : null;
+    // Story capability inputs (§1.1, §1.3): T toggles the trail, C cuts.
+    this.toggleKey = kb ? kb.addKey(Phaser.Input.Keyboard.KeyCodes.T) : null;
+    this.cutKey = kb ? kb.addKey(Phaser.Input.Keyboard.KeyCodes.C) : null;
+    this.uiButtons = [];
 
     // Per-beat objects to tear down on unload (walls, zone markers, sim).
     this.beatObjects = [];
@@ -62,8 +68,16 @@ export default class StoryScene extends Phaser.Scene {
     return this.level.beats[this.beatIndex];
   }
 
-  // Dev-only: '#story&beat=N' jumps straight to a beat for iteration/testing.
-  // Ignored in the normal menu launch path.
+  // Dev-only: '#story&level=N' picks a level, '#story&beat=N' jumps to a beat.
+  // Ignored in the normal menu launch path (which starts at Level 1, beat 0).
+  devStartLevel() {
+    try {
+      const m = (location.hash || '').match(/level=(\d+)/);
+      if (m) return Phaser.Math.Clamp(parseInt(m[1], 10), 0, LEVELS.length - 1);
+    } catch (e) { /* no location */ }
+    return 0;
+  }
+
   devStartBeat() {
     try {
       const m = (location.hash || '').match(/beat=(\d+)/);
@@ -132,6 +146,11 @@ export default class StoryScene extends Phaser.Scene {
     // Draw exit-zone markers for reach-point / escort beats.
     this.drawExitZones(beat);
 
+    // Capability buttons (toggle/cut) for beats that grant them.
+    this.toggleButton = null;
+    this.cutButton = null;
+    this.createCapabilityButtons();
+
     // Scripted beats run a dialogue/caption sequence; placeholder beats just
     // auto-advance on a timer (or SPACE) until their real system is built.
     this.scriptedDone = false;
@@ -160,6 +179,48 @@ export default class StoryScene extends Phaser.Scene {
     if (this.sim) { this.sim.destroy(); this.sim = null; }
     for (const obj of this.beatObjects) obj.destroy();
     this.beatObjects = [];
+    this.toggleButton = null;
+    this.cutButton = null;
+    this.uiButtons = [];
+    if (this.joystick) this.joystick.clearExclusions();
+  }
+
+  // On-screen buttons for the trail toggle / cut, shown only when the beat's
+  // player actually has those capabilities. Keyboard T/C work alongside them.
+  createCapabilityButtons() {
+    const player = this.sim.player;
+    const W = CONFIG.ARENA.WIDTH;
+    const H = CONFIG.ARENA.HEIGHT;
+    if (player.getCapability('trailToggle')) {
+      this.toggleButton = this.makeButton(W - 224, H - 58, 122, 42, 'TRAIL: ON', () => this.doToggle(this.time.now));
+    }
+    if (player.getCapability('cut')) {
+      this.cutButton = this.makeButton(W - 92, H - 58, 72, 42, 'CUT', () => this.doCut(this.time.now));
+    }
+  }
+
+  makeButton(x, y, w, h, label, onTap) {
+    const rect = this.add.rectangle(x + w / 2, y + h / 2, w, h, 0x1c2a1c, 0.9)
+      .setStrokeStyle(2, 0x6a7a55).setDepth(2300).setInteractive();
+    const text = this.add.text(x + w / 2, y + h / 2, label, {
+      fontFamily: 'monospace', fontSize: '14px', color: '#e8eef2',
+    }).setOrigin(0.5).setDepth(2301);
+    rect.on('pointerdown', () => onTap());
+    this.joystick.addExclusion({ x, y, w, h }); // don't let the joystick grab this tap
+    this.beatObjects.push(rect, text);
+    const btn = { rect, text };
+    this.uiButtons.push(btn);
+    return btn;
+  }
+
+  doToggle(now) {
+    const cap = this.sim && this.sim.player.getCapability('trailToggle');
+    if (cap) cap.toggle(now);
+  }
+
+  doCut(now) {
+    const cap = this.sim && this.sim.player.getCapability('cut');
+    if (cap) cap.cut(now);
   }
 
   // Place the flock in a few loose clusters, away from the pen and the player's
@@ -244,7 +305,9 @@ export default class StoryScene extends Phaser.Scene {
 
   spawnEnemy(spec) {
     if (spec.type === 'chaser') {
-      return new Chaser(this, spec.x, spec.y, { detection: spec.detection, patrol: spec.patrol });
+      return new Chaser(this, spec.x, spec.y, {
+        detection: spec.detection, patrol: spec.patrol, world: this.sim,
+      });
     }
     // Other enemy types (shooter/cutter) arrive in a later level.
     console.warn(`StoryScene: enemy type '${spec.type}' not yet implemented`);
@@ -289,8 +352,10 @@ export default class StoryScene extends Phaser.Scene {
       return;
     }
 
-    // sim-driven beats (herding / combat / traversal): real sim.
+    // sim-driven beats (herding / combat / traversal / escort): real sim.
     const vec = this.joystick.getVector(dt);
+    if (this.toggleKey && Phaser.Input.Keyboard.JustDown(this.toggleKey)) this.doToggle(time);
+    if (this.cutKey && Phaser.Input.Keyboard.JustDown(this.cutKey)) this.doCut(time);
     this.sim.step(vec, time, dt);
 
     // Autonomous dog assist, driven after the sim step with the live flock.
@@ -381,10 +446,18 @@ export default class StoryScene extends Phaser.Scene {
     } else if (beat.kind === 'placeholder') {
       line3 = `${beat.placeholderNote || ''} (SPACE / auto-continue)`;
     }
+    // Trail on/off readout + live toggle-button label for toggle beats.
+    let trailLine = '';
+    if (this.sim && this.sim.player.getCapability('trailToggle')) {
+      const on = this.sim.player.trailActive;
+      trailLine = `\nTRAIL: ${on ? 'ON' : 'OFF (sneaking)'}`;
+      if (this.toggleButton) this.toggleButton.text.setText(`TRAIL: ${on ? 'ON' : 'OFF'}`);
+    }
+
     this.hudText.setText(
       `Beat ${this.beatIndex + 1}/${this.level.beats.length} — ${beat.name}\n` +
       `${beat.objective}\n` +
-      line3
+      line3 + trailLine
     );
   }
 }

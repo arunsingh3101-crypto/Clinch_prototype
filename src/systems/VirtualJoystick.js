@@ -19,6 +19,11 @@ export default class VirtualJoystick {
     this.smoothingTimeConstant = 0.06; // seconds; lower = snappier, higher = smoother
     this.pointerId = null;
 
+    // Rects (game-space {x,y,w,h}) where a press should NOT start the joystick —
+    // used so on-screen story buttons (toggle/cut) can be tapped without the
+    // floating joystick grabbing the same press.
+    this.exclusions = [];
+
     this.baseGfx = scene.add.circle(0, 0, this.maxRadius, 0xffffff, 0.14).setVisible(false);
     this.thumbGfx = scene.add.circle(0, 0, 30, 0xffffff, 0.32).setVisible(false);
     this.baseGfx.setStrokeStyle(2, 0xffffff, 0.25);
@@ -36,8 +41,21 @@ export default class VirtualJoystick {
     this.cursors = scene.input.keyboard ? scene.input.keyboard.createCursorKeys() : null;
   }
 
+  addExclusion(rect) {
+    this.exclusions.push(rect);
+  }
+
+  clearExclusions() {
+    this.exclusions = [];
+  }
+
+  inExclusion(x, y) {
+    return this.exclusions.some((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
+  }
+
   onDown(pointer) {
     if (this.active) return;
+    if (this.inExclusion(pointer.x, pointer.y)) return; // press was on a UI button
     this.active = true;
     this.pointerId = pointer.id;
     this.originX = pointer.x;
