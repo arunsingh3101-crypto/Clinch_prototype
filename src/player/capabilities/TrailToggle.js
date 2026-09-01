@@ -1,4 +1,4 @@
-import { default as PlayerCapability } from './PlayerCapability.js?v=20260901110438';
+import { default as PlayerCapability } from './PlayerCapability.js?v=20260901114844';
 
 // Trail on/off toggle (tutorial spec §1.1). Story mode only.
 //

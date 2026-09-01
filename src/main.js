@@ -1,7 +1,15 @@
-import { CONFIG } from './config.js?v=20260901110438';
-import GameScene from './scenes/GameScene.js?v=20260901110438';
+import { CONFIG } from './config.js?v=20260901114844';
+import GameScene from './scenes/GameScene.js?v=20260901114844';
+import StoryScene from './scenes/StoryScene.js?v=20260901114844';
 
-export function startGame() {
+// `mode` selects the starting scene: 'arcade' (default) or 'story'. The menu
+// will pass this once the Story/Arcade toggle lands; until then a '#story' URL
+// hash is a dev entry into story mode. The first scene in the array autostarts;
+// the other stays registered but inactive.
+export function startGame(mode = 'arcade') {
+  const hash = (typeof location !== 'undefined' ? location.hash.replace('#', '') : '');
+  const useStory = mode === 'story' || hash === 'story';
+
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game-container',
@@ -15,7 +23,7 @@ export function startGame() {
     input: {
       activePointers: 2,
     },
-    scene: [GameScene],
+    scene: useStory ? [StoryScene, GameScene] : [GameScene, StoryScene],
   });
 
   // Belt-and-suspenders against the container having been display:none until

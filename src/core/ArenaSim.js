@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901110438';
-import { dist, pointInPolygon } from '../utils/geometry.js?v=20260901110438';
-import Player from '../entities/Player.js?v=20260901110438';
-import AlertPulse from '../world/AlertPulse.js?v=20260901110438';
-import Residue from '../world/Residue.js?v=20260901110438';
+import { CONFIG } from '../config.js?v=20260901114844';
+import { dist, pointInPolygon } from '../utils/geometry.js?v=20260901114844';
+import Player from '../entities/Player.js?v=20260901114844';
+import AlertPulse from '../world/AlertPulse.js?v=20260901114844';
+import Residue from '../world/Residue.js?v=20260901114844';
 
 // The shared core simulation: player + trail + enemies + projectiles, loop
 // resolution, contact damage, and projectile stepping — the verb itself, with
@@ -161,5 +161,19 @@ export default class ArenaSim {
     const residue = new Residue(this.scene, points, now);
     this.residues.push(residue);
     return residue;
+  }
+
+  // Tear down every owned game object — used when a story beat unloads. (Arcade
+  // never calls this; it restarts the whole scene instead.)
+  destroy() {
+    this.player.destroy();
+    for (const e of this.enemies) e.destroy();
+    for (const p of this.projectiles) p.destroy();
+    for (const p of this.pulses) p.destroy();
+    for (const r of this.residues) r.destroy();
+    this.enemies = [];
+    this.projectiles = [];
+    this.pulses = [];
+    this.residues = [];
   }
 }
