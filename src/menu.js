@@ -1,4 +1,4 @@
-import { CONFIG } from './config.js?v=20260901141602';
+import { CONFIG } from './config.js?v=20260903090952';
 
 // Wires the start-screen overlay (plain HTML for touch-friendly native
 // sliders/checkboxes) to CONFIG before the Phaser game is created. Playtest
@@ -44,6 +44,14 @@ const modeButtons = document.querySelectorAll('.mode-btn');
 const modeHint = document.getElementById('mode-hint');
 const arcadeOnlyEls = document.querySelectorAll('.arcade-only');
 
+function hashWantsStory() {
+  try {
+    return (location.hash || '').replace(/^#/, '').startsWith('story');
+  } catch (e) {
+    return false;
+  }
+}
+
 function setMode(mode) {
   selectedMode = mode;
   modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
@@ -54,6 +62,7 @@ function setMode(mode) {
 }
 
 modeButtons.forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+if (hashWantsStory()) setMode('story');
 
 // The scene key the pause controls target, set when a run starts.
 let currentSceneKey = 'GameScene';
@@ -83,13 +92,20 @@ quitToMenuBtn.addEventListener('click', () => {
   pauseBtn.style.display = 'none';
   document.getElementById('game-container').style.display = 'none';
   document.getElementById('menu-overlay').style.display = 'flex';
+  booting = false;
   if (currentGame) {
     currentGame.destroy(true);
     currentGame = null;
   }
 });
 
-document.getElementById('start-btn').addEventListener('click', () => {
+let booting = false;
+
+function bootFromMenu(mode) {
+  if (booting) return;
+  booting = true;
+  setMode(mode);
+
   CONFIG.PLAYER.SPEED = Number(speedSlider.value);
   CONFIG.PLAYER.HEALTH = Number(healthSlider.value);
   CONFIG.TRAIL.LIFETIME_MS = Number(trailSlider.value);
@@ -118,17 +134,26 @@ document.getElementById('start-btn').addEventListener('click', () => {
   // one full layout/paint has happened first.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      import('./main.js?v=20260901141602')
+      import('./main.js?v=20260903090952')
         .then(({ startGame }) => {
           currentSceneKey = selectedMode === 'story' ? 'StoryScene' : 'GameScene';
           currentGame = startGame(selectedMode);
           pauseBtn.style.display = 'flex';
         })
         .catch((err) => {
+          booting = false;
           const el = document.getElementById('error-overlay');
           el.style.display = 'block';
           el.textContent += 'Failed to start game: ' + (err.stack || err.message || err) + '\n\n';
         });
     });
   });
-});
+}
+
+document.getElementById('start-btn').addEventListener('click', () => bootFromMenu('arcade'));
+document.getElementById('start-story-btn').addEventListener('click', () => bootFromMenu('story'));
+
+// Dev/deep-link entry: '#story' (optionally '#story&beat=N') skips the menu
+// and boots StoryScene. The hash used to only take effect after clicking
+// Start, which looked like it did nothing.
+if (hashWantsStory()) bootFromMenu('story');

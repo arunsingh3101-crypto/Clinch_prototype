@@ -1,6 +1,6 @@
-import { CONFIG } from '../../config.js?v=20260901141602';
-import { clamp } from '../../utils/geometry.js?v=20260901141602';
-import DetectionStateMachine, { DETECT_STATE, senseDetection } from '../../systems/DetectionStateMachine.js?v=20260901141602';
+import { CONFIG } from '../../config.js?v=20260903090952';
+import { clamp } from '../../utils/geometry.js?v=20260903090952';
+import DetectionStateMachine, { DETECT_STATE, senseDetection } from '../../systems/DetectionStateMachine.js?v=20260903090952';
 
 // Pure pursuit, slower than the player, blocked by the trail like a wall
 // (basic wall-slide steering — enough for "paths around it" at prototype fidelity).

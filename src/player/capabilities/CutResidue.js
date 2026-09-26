@@ -1,5 +1,5 @@
-import { default as PlayerCapability } from './PlayerCapability.js?v=20260901141602';
-import { CONFIG } from '../../config.js?v=20260901141602';
+import { default as PlayerCapability } from './PlayerCapability.js?v=20260903090952';
+import { CONFIG } from '../../config.js?v=20260903090952';
 
 // Cut-Residue (tutorial spec §1.3). Story mode only.
 //

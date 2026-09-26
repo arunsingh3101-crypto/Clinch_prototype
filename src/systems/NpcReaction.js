@@ -1,4 +1,4 @@
-import { CONFIG } from '../config.js?v=20260901141602';
+import { CONFIG } from '../config.js?v=20260903090952';
 
 // NPC reaction state machine (tutorial spec §1.5). Same three-state pattern as
 // the enemy detection machine, applied to NPCs as an OPTIONAL per-instance

@@ -1,11 +1,11 @@
-import { CONFIG } from './config.js?v=20260901141602';
-import GameScene from './scenes/GameScene.js?v=20260901141602';
-import StoryScene from './scenes/StoryScene.js?v=20260901141602';
+import { CONFIG } from './config.js?v=20260903090952';
+import GameScene from './scenes/GameScene.js?v=20260903090952';
+import StoryScene from './scenes/StoryScene.js?v=20260903090952';
 
 // `mode` selects the starting scene: 'arcade' (default) or 'story'. The menu
-// will pass this once the Story/Arcade toggle lands; until then a '#story' URL
-// hash is a dev entry into story mode. The first scene in the array autostarts;
-// the other stays registered but inactive.
+// passes this from Start Arcade / Start Story. A '#story' hash is also a
+// deep-link into story mode (menu.js auto-boots when that hash is present).
+// The first scene in the array autostarts; the other stays registered but inactive.
 export function startGame(mode = 'arcade') {
   const hash = (typeof location !== 'undefined' ? location.hash.replace('#', '') : '');
   // Dev entry: '#story' (optionally '#story&beat=N' to jump to a beat).

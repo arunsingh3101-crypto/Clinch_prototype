@@ -1,8 +1,8 @@
-import { CONFIG } from '../config.js?v=20260901141602';
-import { dist, pointInPolygon } from '../utils/geometry.js?v=20260901141602';
-import Player from '../entities/Player.js?v=20260901141602';
-import AlertPulse from '../world/AlertPulse.js?v=20260901141602';
-import Residue from '../world/Residue.js?v=20260901141602';
+import { CONFIG } from '../config.js?v=20260903090952';
+import { dist, pointInPolygon } from '../utils/geometry.js?v=20260903090952';
+import Player from '../entities/Player.js?v=20260903090952';
+import AlertPulse from '../world/AlertPulse.js?v=20260903090952';
+import Residue from '../world/Residue.js?v=20260903090952';
 
 // The shared core simulation: player + trail + enemies + projectiles, loop
 // resolution, contact damage, and projectile stepping — the verb itself, with

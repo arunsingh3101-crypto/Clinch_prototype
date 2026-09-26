@@ -1,6 +1,6 @@
-import { CONFIG } from '../../config.js?v=20260901141602';
-import { clamp } from '../../utils/geometry.js?v=20260901141602';
-import Chaser from './Chaser.js?v=20260901141602';
+import { CONFIG } from '../../config.js?v=20260903090952';
+import { clamp } from '../../utils/geometry.js?v=20260903090952';
+import Chaser from './Chaser.js?v=20260903090952';
 
 // Tutorial sheep (spec §1.6, §5): instantiated as a chaser-variant — it reuses
 // Chaser's trail-aware movement (tryMove / slide / clamp), not a new system —
