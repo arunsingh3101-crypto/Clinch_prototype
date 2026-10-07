@@ -126,7 +126,14 @@ exit; falling out of the bottom is death.
 7. **Rotten Ledge** – crumbling blocks.
 8. **Summit** – everything combined, ending at the flag.
 
-Each room hides one strawberry off the main path.
+Each room hides one berry off the main path. Rooms 1–2 have **no dash**
+yet (per-room `dashes: 0`), so the jump and climb lessons can't be skipped.
+
+Rooms are authored with rectangle ops in `tools/build_rooms.py`, which
+writes the ASCII maps into `src/world/rooms.js`. `tools/solver.mjs` runs a
+best-first search over 4-frame input macros on the headless sim to prove
+each room and each berry is reachable, and saves the routes to
+`tests/routes.json` for the tests to replay.
 
 ## Controls
 
@@ -138,6 +145,10 @@ Each room hides one strawberry off the main path.
 ## Testing
 
 * `npm test` – headless Node tests on the pure physics (jump heights, coyote,
-  buffer, dash distance, wall climb/jump) plus a scripted route through every room.
+  buffer, dash distance, wall climb/jump, corner correction, crystals,
+  spikes) plus solver routes through every room, every berry, and a full run.
 * `npm run e2e` – Playwright: loads the build, drives jump/dash/climb through
-  the test hook, checks positions, screenshots all 8 rooms.
+  the `window.__summit` test hook (`?test=1` = deterministic stepping), checks
+  positions, plays every room's route, finishes a full run to the stats
+  screen, tests real keyboard input, and tests multi-touch on an emulated
+  phone in portrait and landscape. Screenshots go to `tests/screens/`.

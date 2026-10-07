@@ -4,6 +4,7 @@ import { makeRoomTexture, makeBackground } from '../gfx/Art.js';
 import { ROOMS } from '../world/rooms.js';
 import { SANDBOX } from '../world/testRoom.js';
 import { sfx } from '../audio/Sfx.js';
+import { decode } from '../sim/routeInput.js';
 import { controls, params } from '../globals.js';
 
 const HAIR_OUTLINE = 0x17142a;
@@ -242,8 +243,8 @@ export class GameScene extends Phaser.Scene {
 
   addGhost() {
     const p = this.sim.player;
-    const g = this.add.image(this.playerSpr.x, this.playerSpr.y, 'player-sil', this.playerSpr.frame.name)
-      .setOrigin(0.5, 1).setFlipX(this.playerSpr.flipX).setTint(COLORS.HAIR_NO_DASH).setAlpha(0.7);
+    const g = this.add.image(p.x + p.w / 2, p.y + p.h, 'player-sil', this.pickFrame(p))
+      .setOrigin(0.5, 1).setFlipX(p.facing < 0).setTint(COLORS.HAIR_NO_DASH).setAlpha(0.7);
     this.ghosts.add(g);
     this.tweens.add({ targets: g, alpha: 0, duration: 260, onComplete: () => g.destroy() });
   }
@@ -349,7 +350,7 @@ export class GameScene extends Phaser.Scene {
     const lean = frame === 'dash' ? 1 : 0;
     const headX = f > 0 ? sx + 7 + lean : sx + 8 - lean;
     const headY = sy + 6 + bob;
-    const col = p.hairFlash > 0 ? COLORS.HAIR_FLASH : p.dashes > 0 ? COLORS.HAIR_DASH : COLORS.HAIR_NO_DASH;
+    const col = p.hairFlash > 0 ? COLORS.HAIR_FLASH : p.dashes > 0 || p.maxDashes === 0 ? COLORS.HAIR_DASH : COLORS.HAIR_NO_DASH;
 
     const nodes = this.hair;
     nodes[0].x = headX - f * 1; nodes[0].y = headY;
@@ -397,6 +398,20 @@ export class GameScene extends Phaser.Scene {
         scene.roomTitle.setAlpha(1);
         return scene.sim.snapshot();
       },
+      // play a solver route ([[token, frames], ...]); stops early if the room changes
+      replay(route, { stopOnRoomChange = true } = {}) {
+        const start = scene.sim.roomIndex;
+        for (const [tok, n] of route) {
+          for (let f = 0; f < n; f++) {
+            scene.stepSim(decode(tok, f));
+            if (stopOnRoomChange && scene.sim.roomIndex !== start) { scene.render(STEP); return scene.sim.snapshot(); }
+          }
+        }
+        scene.render(STEP);
+        return scene.sim.snapshot();
+      },
+      // run out the room-transition wipe without stepping the new room
+      skipTransition() { while (scene.sim.transitionTimer > 0) scene.stepSim(EMPTY_INPUT); return scene.sim.snapshot(); },
       place(x, y) { const p = scene.sim.player; p.x = x; p.y = y; p.vx = p.vy = 0; scene.resetHair(); },
       roomCount: () => scene.rooms.length,
       roomName: () => scene.sim.world.def.name,

@@ -118,8 +118,8 @@ export class Sim {
       if (hit) return this.die();
     }
     for (const c of w.crystals) {
-      if (c.active && overlaps(r, c) && (p.dashes < MOVE.MAX_DASHES || p.stamina < MOVE.CLIMB_TIRED_THRESHOLD)) {
-        p.dashes = MOVE.MAX_DASHES;
+      if (c.active && overlaps(r, c) && (p.dashes < p.maxDashes || p.stamina < MOVE.CLIMB_TIRED_THRESHOLD)) {
+        p.dashes = p.maxDashes;
         p.stamina = MOVE.CLIMB_MAX_STAMINA;
         p.hairFlash = 0.1;
         c.active = false; c.timer = WORLD.CRYSTAL_RESPAWN;
@@ -163,6 +163,39 @@ export class Sim {
     this.loadRoom(this.roomIndex + 1);
     this.transitionTimer = WORLD.ROOM_TRANSITION;
     this.events.push({ type: 'room', index: this.roomIndex });
+  }
+
+  // Cheap save/restore of all mutable state (used by the route solver).
+  save() {
+    const p = this.player;
+    const ps = {};
+    for (const k in p) if (k !== 'world' && k !== 'input') ps[k] = p[k];
+    ps.dashDir = { ...p.dashDir }; ps.beforeDash = { ...p.beforeDash };
+    const w = this.world;
+    return {
+      p: ps, room: this.roomIndex,
+      crystals: w.crystals.map((c) => ({ ...c })), crumbles: w.crumbles.map((c) => ({ ...c })),
+      platforms: w.platforms.map((c) => ({ ...c })), berriesW: w.berries.map((b) => b.collected),
+      berries: [...this.berries], deaths: this.deaths, time: this.time, frames: this.frames,
+      freeze: this.freezeTimer, dead: this.deadTimer, trans: this.transitionTimer, finished: this.finished,
+      pending: { ...this.pending },
+    };
+  }
+
+  restore(s) {
+    if (s.room !== this.roomIndex) this.loadRoom(s.room);
+    const w = this.world;
+    Object.assign(this.player, s.p);
+    this.player.dashDir = { ...s.p.dashDir }; this.player.beforeDash = { ...s.p.beforeDash };
+    s.crystals.forEach((c, i) => Object.assign(w.crystals[i], c));
+    s.crumbles.forEach((c, i) => Object.assign(w.crumbles[i], c));
+    s.platforms.forEach((c, i) => Object.assign(w.platforms[i], c));
+    s.berriesW.forEach((b, i) => (w.berries[i].collected = b));
+    this.berries = new Set(s.berries);
+    this.deaths = s.deaths; this.time = s.time; this.frames = s.frames;
+    this.freezeTimer = s.freeze; this.deadTimer = s.dead; this.transitionTimer = s.trans; this.finished = s.finished;
+    this.pending = { ...s.pending };
+    this.events = [];
   }
 
   drainEvents() { const e = this.events; this.events = []; return e; }

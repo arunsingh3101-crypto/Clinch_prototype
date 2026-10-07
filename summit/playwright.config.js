@@ -13,7 +13,7 @@ export default defineConfig({
     launchOptions: { executablePath, args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] },
   },
   projects: [
-    { name: 'desktop', use: {} },
+    { name: 'desktop', use: {}, testIgnore: /mobile\.spec/ },
     { name: 'phone', use: { ...devices['Pixel 7'], launchOptions: { executablePath, args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] } }, testMatch: /mobile\.spec/ },
   ],
   webServer: {

@@ -14,6 +14,7 @@ export const ST_DASH = 'dash';
 export class Player {
   constructor(world, x, y) {
     this.world = world;
+    this.maxDashes = world.def.dashes ?? M.MAX_DASHES; // early rooms have no dash yet
     this.w = M.HITBOX_W;
     this.h = M.HITBOX_H;
     this.reset(x, y);
@@ -24,7 +25,7 @@ export class Player {
     this.vx = 0; this.vy = 0;
     this.facing = 1;
     this.state = ST_NORMAL;
-    this.dashes = M.MAX_DASHES;
+    this.dashes = this.maxDashes;
     this.stamina = M.CLIMB_MAX_STAMINA;
     this.onGround = false;
     this.coyote = 0;
@@ -79,8 +80,8 @@ export class Player {
       this.coyote = M.COYOTE_TIME;
       this.wallSlideTimer = M.WALL_SLIDE_TIME;
       this.stamina = M.CLIMB_MAX_STAMINA;
-      if (this.dashRefillCooldown <= 0 && this.dashes < M.MAX_DASHES && this.state !== ST_DASH) {
-        this.dashes = M.MAX_DASHES;
+      if (this.dashRefillCooldown <= 0 && this.dashes < this.maxDashes && this.state !== ST_DASH) {
+        this.dashes = this.maxDashes;
         this.hairFlash = 0.1;
         ev.push({ type: 'refill' });
       }
@@ -360,7 +361,7 @@ export class Player {
     this.vx += this.liftX;
     this.varJumpSpeed = this.vy;
     // a grounded super refunds the dash
-    if (this.dashRefillCooldown <= 0 || this.onGround) this.dashes = M.MAX_DASHES;
+    if (this.dashRefillCooldown <= 0 || this.onGround) this.dashes = this.maxDashes;
     sim.events.push({ type: 'jump', super: true });
   }
 

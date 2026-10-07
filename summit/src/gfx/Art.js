@@ -33,9 +33,9 @@ const GLYPHS = {
   A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110',
   E: '111100110100111', F: '111100110100100', G: '011100101101011', H: '101101111101101',
   I: '111010010010111', J: '001001001101010', K: '101101110101101', L: '100100100100111',
-  M: '101111111101101', N: '110101101101101', O: '010101101101010', P: '110101110100100',
+  M: '1000111011101011000110001', N: '110101101101101', O: '010101101101010', P: '110101110100100',
   Q: '010101101110011', R: '110101110101101', S: '011100010001110', T: '111010010010010',
-  U: '101101101101111', V: '101101101101010', W: '101101111111101', X: '101101010101101',
+  U: '101101101101111', V: '101101101101010', W: '1000110001101011101110001', X: '101101010101101',
   Y: '101101010010010', Z: '111001010100111',
   ':': '000010000010000', '.': '000000000000010', '/': '001001010100100', '!': '010010010000010',
   '-': '000000111000000', '?': '111001010000010', ',': '000000000010100', "'": '010010000000000',
@@ -44,19 +44,31 @@ const GLYPHS = {
 };
 export const FONT_CHARS = Object.keys(GLYPHS).join('');
 
+// Glyphs are 3 px wide (15 bits) or 5 px wide (25 bits); cells are 6 px and
+// each char's advance is trimmed to its real width + 1 (proportional font).
+const glyphW = (g) => (g.length === 25 ? 5 : 3);
+
 export function makeFont(scene) {
   const n = FONT_CHARS.length;
-  canvasTex(scene, 'font-img', n * 4, 6, (ctx) => {
+  canvasTex(scene, 'font-img', n * 6, 6, (ctx) => {
     [...FONT_CHARS].forEach((ch, i) => {
-      const g = GLYPHS[ch];
-      for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (g[r * 3 + c] === '1') px(ctx, '#fff', i * 4 + c, r);
+      const g = GLYPHS[ch], w = glyphW(g);
+      for (let r = 0; r < 5; r++) for (let c = 0; c < w; c++) if (g[r * w + c] === '1') px(ctx, '#fff', i * 6 + c, r);
     });
   });
   const cfg = {
-    image: 'font-img', width: 4, height: 6, chars: FONT_CHARS, charsPerRow: n,
+    image: 'font-img', width: 6, height: 6, chars: FONT_CHARS, charsPerRow: n,
     spacing: { x: 0, y: 0 }, offset: { x: 0, y: 0 }, lineSpacing: 2,
   };
-  scene.cache.bitmapFont.add('pix', Phaser.GameObjects.RetroFont.Parse(scene, cfg));
+  const data = Phaser.GameObjects.RetroFont.Parse(scene, cfg);
+  const texW = n * 6;
+  for (const ch of FONT_CHARS) {
+    const c = data.data.chars[ch.charCodeAt(0)];
+    const w = glyphW(GLYPHS[ch]) + 1;
+    c.width = w; c.xAdvance = w;
+    c.u1 = c.u0 + w / texW;
+  }
+  scene.cache.bitmapFont.add('pix', data);
 }
 
 // -------------------------------------------------------------- player ----
@@ -217,21 +229,28 @@ export function makeObjects(scene) {
 }
 
 // ------------------------------------------------------------------ rooms --
-const SPIKE_COL = { fill: '#cdd6ee', shade: '#8a93b3', o: '#17142a' };
-
+// Two outlined triangles per tile, 8 px tall, pointing away from the wall.
 function drawSpike(ctx, tx, ty, dir) {
   const x0 = tx * TILE, y0 = ty * TILE;
-  for (let k = 0; k < 4; k++) {
-    for (let i = 0; i < 7; i++) {
-      // triangle: base 4px, height 7px
-      const half = Math.max(0, Math.floor((i * 2) / 7));
-      const a = k * 4 + 1 - half + 1, len = half * 2 + 1;
-      let x, y, w, h;
-      if (dir === 'up') { x = x0 + a; y = y0 + 9 + i; w = len; h = 1; }
-      if (dir === 'down') { x = x0 + a; y = y0 + 6 - i; w = len; h = 1; }
-      if (dir === 'left') { x = x0 + 9 + i; y = y0 + a; w = 1; h = len; }
-      if (dir === 'right') { x = x0 + 6 - i; y = y0 + a; w = 1; h = len; }
-      px(ctx, i < 2 ? SPIKE_COL.fill : i < 5 ? SPIKE_COL.fill : SPIKE_COL.shade, x, y, w, h);
+  // draw in local "pointing up" space: u along the base (0..15), v height (0 = tip row)
+  const put = (c, u, v) => {
+    let x, y;
+    if (dir === 'up') { x = u; y = 8 + v; }
+    else if (dir === 'down') { x = u; y = 7 - v; }
+    else if (dir === 'left') { x = 8 + v; y = u; }
+    else { x = 7 - v; y = u; }
+    px(ctx, c, x0 + x, y0 + y);
+  };
+  for (let k = 0; k < 2; k++) {
+    const cx = k * 8 + 3.5;
+    for (let v = 0; v < 8; v++) {
+      const half = (v / 7) * 4;
+      for (let u = k * 8; u < k * 8 + 8; u++) {
+        const d = Math.abs(u - cx);
+        if (d > half + 0.01) continue;
+        const edge = d > half - 1 || v === 7;
+        put(edge ? '#17142a' : u < cx ? '#f4f6ff' : '#aab3d6', u, v);
+      }
     }
   }
 }

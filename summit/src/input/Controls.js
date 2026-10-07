@@ -1,6 +1,9 @@
 // Keyboard + touch input merged into one state, sampled once per fixed step.
 // Presses are latched so a tap shorter than a frame is never lost.
 
+// Keep receiving a finger's events even if it slides off the control.
+const capture = (el, e) => { try { el.setPointerCapture(e.pointerId); } catch { /* synthetic / stale pointer */ } };
+
 const KEYMAP = {
   ArrowLeft: 'left', KeyA: 'left',
   ArrowRight: 'right', KeyD: 'right',
@@ -97,7 +100,7 @@ export class Controls {
     };
     pad.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      pad.setPointerCapture?.(e.pointerId);
+      capture(pad, e);
       padPointers.set(e.pointerId, { dx: 0, dy: 0 });
       padMove(e);
     });
@@ -117,7 +120,7 @@ export class Controls {
         el.classList.toggle('down', ptrs.size > 0);
         if (!was && this.touch[action]) this.emitPress(action);
       };
-      el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture?.(e.pointerId); ptrs.add(e.pointerId); sync(); });
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); capture(el, e); ptrs.add(e.pointerId); sync(); });
       const up = (e) => { ptrs.delete(e.pointerId); sync(); };
       el.addEventListener('pointerup', up);
       el.addEventListener('pointercancel', up);
